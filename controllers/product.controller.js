@@ -13,8 +13,12 @@ export const createProduct = async (data, user) => {
   return product;
 };
 
-export const getAllProducts = async () => {
-  return await Product.find().populate("merchantId", "name email");
+export const getAllProducts = async (query) => {
+  const { page = 1, limit = 10 } = query;
+
+  return await Product.find()
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
 };
 
 export const getSingleProduct = async (id) => {

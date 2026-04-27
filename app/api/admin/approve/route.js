@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { getAuthUser } from "@/middleware/auth";
-import { authorizeRoles } from "@/middleware/role.middleware";
+import { authorizeRoles } from "@/middleware/roles";
 import { approveMerchant } from "@/controllers/admin.controller";
 import { NextResponse } from "next/server";
 

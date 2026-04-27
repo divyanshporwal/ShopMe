@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-
-const schema = new mongoose.Schema(
+const MerchantRequestSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
     status: {
       type: String,
@@ -16,4 +16,4 @@ const schema = new mongoose.Schema(
 );
 
 export default mongoose.models.MerchantRequest ||
-  mongoose.model("MerchantRequest", schema);
+  mongoose.model("MerchantRequest", MerchantRequestSchema);

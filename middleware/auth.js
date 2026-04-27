@@ -3,7 +3,9 @@ import User from "@/models/user.model";
 import { cookies } from "next/headers";
 
 export async function getAuthUser() {
-  const cookieStore = cookies();
+  // ✅ FIX: await cookies()
+  const cookieStore = await cookies();
+
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
