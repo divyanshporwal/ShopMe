@@ -16,6 +16,7 @@ export default function HomePage() {
   const [focused, setFocused] = useState(false);
 
   // Fetch real products, fallback to mock
+  
   useEffect(() => {
     fetch("/api/products")
       .then((r) => r.json())

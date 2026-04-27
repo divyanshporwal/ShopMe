@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useCartStore } from "@/store/cartStore";
 
 const NAV_LINKS = [
   { label: "ALL", href: "/customer/products", category: "" },
@@ -17,7 +18,7 @@ const NAV_LINKS = [
   { label: "SALE", href: "/customer/products?sale=true", category: "sale", sale: true },
 ];
 
-interface User {
+interface UserType {
   _id: string;
   name: string;
   email: string;
@@ -28,7 +29,7 @@ interface User {
 export default function Navbar() {
   const [search, setSearch] = useState("");
   const [focused, setFocused] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,6 +38,11 @@ export default function Navbar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const currentCategory = searchParams.get("category") || "";
+
+  // Cart store
+  const cart = useCartStore((s) => s.cart);
+  const totalItems = cart.reduce((sum: number, i: any) => sum + i.quantity, 0);
+  const totalPrice = cart.reduce((sum: number, i: any) => sum + i.price * i.quantity, 0);
 
   // Fetch current user
   useEffect(() => {
@@ -48,7 +54,7 @@ export default function Navbar() {
       })
       .catch(() => setUser(null))
       .finally(() => setUserLoading(false));
-  }, [pathname]); // re-fetch on route change
+  }, [pathname]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -141,7 +147,6 @@ export default function Navbar() {
         <div className="flex items-center ml-auto shrink-0 divide-x divide-gray-200 border-l border-gray-200">
 
           {userLoading ? (
-            // Loading skeleton
             <div className="flex items-center gap-3 px-5 h-16">
               <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
               <div className="space-y-1.5">
@@ -185,14 +190,10 @@ export default function Navbar() {
                   </div>
                 </button>
 
-                {/* Dropdown menu */}
                 {showDropdown && (
                   <div className="absolute right-0 top-[68px] w-56 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 z-50">
-                    {/* User info */}
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-bold text-gray-900 truncate">
-                        {user.name}
-                      </p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
                       <p className="text-xs text-gray-400 truncate">{user.email}</p>
                       <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         user.role === "ADMIN"
@@ -205,7 +206,6 @@ export default function Navbar() {
                       </span>
                     </div>
 
-                    {/* Links */}
                     <div className="py-1.5">
                       <Link
                         href={getDashboardLink()}
@@ -235,11 +235,15 @@ export default function Navbar() {
                         >
                           <ShoppingBag className="w-4 h-4 text-gray-400" />
                           My Cart
+                          {totalItems > 0 && (
+                            <span className="ml-auto bg-black text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                              {totalItems}
+                            </span>
+                          )}
                         </Link>
                       )}
                     </div>
 
-                    {/* Logout */}
                     <div className="border-t border-gray-100 pt-1.5">
                       <button
                         onClick={handleLogout}
@@ -261,21 +265,24 @@ export default function Navbar() {
                 >
                   <div className="relative">
                     <ShoppingBag className="w-6 h-6 text-gray-700 group-hover:text-black" />
-                    <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                      0
-                    </span>
+                    {totalItems > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                        {totalItems}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-col leading-none">
                     <span className="text-[11px] text-gray-400 font-medium">My Cart</span>
                     <span className="text-sm font-bold text-gray-900 group-hover:text-black">
-                      ₹0
+                      {totalItems > 0
+                        ? `₹${totalPrice.toLocaleString("en-IN")}`
+                        : "Empty"}
                     </span>
                   </div>
                 </Link>
               )}
             </>
           ) : (
-            // Not logged in — show Login + Register
             <>
               <Link
                 href="/auth/login"
@@ -286,9 +293,7 @@ export default function Navbar() {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-[11px] text-gray-400 font-medium">Have an account?</span>
-                  <span className="text-sm font-bold text-gray-900 group-hover:text-black">
-                    Login
-                  </span>
+                  <span className="text-sm font-bold text-gray-900 group-hover:text-black">Login</span>
                 </div>
               </Link>
 
@@ -301,9 +306,7 @@ export default function Navbar() {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-[11px] text-gray-400 font-medium">New here?</span>
-                  <span className="text-sm font-bold text-gray-900 group-hover:text-black">
-                    Register
-                  </span>
+                  <span className="text-sm font-bold text-gray-900 group-hover:text-black">Register</span>
                 </div>
               </Link>
             </>
@@ -341,5 +344,5 @@ export default function Navbar() {
         </div>
       </div>
     </header>
-  );
+  );  
 }
