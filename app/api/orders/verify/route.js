@@ -1,19 +1,19 @@
-import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { verifyPayment } from "@/controllers/order.controller";
 
 export async function POST(req) {
   try {
-    await connectDB();
-
     const body = await req.json();
 
-    const order = await verifyPayment(body);
-
-    return NextResponse.json(order);
+    return NextResponse.json(
+      {
+        message: "Use /api/payment/verify for Stripe payment verification",
+        session_id: body?.session_id,
+      },
+      { status: 410 }
+    );
   } catch (error) {
     return NextResponse.json(
-      { message: error.message },
+      { message: error instanceof Error ? error.message : "Invalid request" },
       { status: 400 }
     );
   }
