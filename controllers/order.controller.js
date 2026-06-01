@@ -1,8 +1,7 @@
 import Order from "@/models/order.model";
 import Product from "@/models/product.model";
-import { razorpay, verifyRazorpaySignature } from "@/services/payment.service";
 
-// 1. Create Order (before payment)
+// 1. Create Order
 export const createOrder = async (items, user) => {
   if (!items || items.length === 0) {
     throw new Error("No items provided");
@@ -31,51 +30,35 @@ export const createOrder = async (items, user) => {
     };
   });
 
-  // 💳 Create Razorpay order
-  const razorpayOrder = await razorpay.orders.create({
-    amount: Math.round(totalAmount * 100),
-    currency: "INR",
-  });
-
   // 📝 Save order
   const order = await Order.create({
     userId: user._id,
     items: orderItems,
     totalAmount,
-    paymentId: razorpayOrder.id,
+    status: "PENDING",
+    paymentStatus: "PENDING",
   });
 
-  return { order, razorpayOrder };
+  return { order };
 };
 
-// 2. Verify Payment (CRITICAL)
+// 2. Legacy payment verification placeholder.
+// Stripe verification is handled in app/api/payment/verify/route.ts.
 export const verifyPayment = async (data) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-  } = data;
+  const { orderId, paymentId } = data;
 
-  // 🔐 Step 1: Verify signature
-  verifyRazorpaySignature({
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-  });
-
-  // 🔎 Step 2: Find order
-  const order = await Order.findOne({
-    paymentId: razorpay_order_id,
-  });
+  const order = await Order.findById(orderId);
 
   if (!order) throw new Error("Order not found");
 
-  // ❗ Prevent double payment updates
   if (order.paymentStatus === "SUCCESS") {
     return order;
   }
 
-  // ✅ Step 3: Update order
+  if (paymentId) {
+    order.paymentId = paymentId;
+  }
+
   order.paymentStatus = "SUCCESS";
   order.status = "PAID";
 
