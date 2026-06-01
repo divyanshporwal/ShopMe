@@ -20,7 +20,7 @@ export default function CartPage() {
     (sum: number, item: any) => sum + (item.originalPrice || item.price) * item.quantity, 0
   );
   const savedAmount = originalTotal - subtotal;
-  const shipping = subtotal >= 999 ? 0 : 99;
+  const shipping = subtotal >= 400 ? 0 : 99;
   const promoDiscount = promoApplied ? Math.round(subtotal * 0.1) : 0;
   const finalTotal = subtotal + shipping - promoDiscount;
 

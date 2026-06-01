@@ -27,7 +27,7 @@ export async function POST(req) {
       items: body.items,
       totalAmount,
       status: "PENDING",
-      paymentStatus: "PAID",
+      paymentStatus: "SUCCESS",
     });
 
     return NextResponse.json({ success: true, order: newOrder });

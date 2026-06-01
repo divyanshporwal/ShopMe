@@ -23,7 +23,13 @@ export async function POST(req) {
 
       mode: "payment",
 
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/success`,
+      metadata: {
+        items: JSON.stringify(items),
+        userId: "USER_ID_HERE",
+      },
+
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/success?session_id={CHECKOUT_SESSION_ID}`,
+
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/cart`,
     });
 
