@@ -1,6 +1,5 @@
 import Order from "@/models/order.model";
 import Product from "@/models/product.model";
-import { razorpay, verifyRazorpaySignature } from "@/services/payment.service";
 
 // 1. Create Order (before payment)
 export const createOrder = async (items, user) => {
