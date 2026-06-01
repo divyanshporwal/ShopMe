@@ -5,12 +5,16 @@ import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+type AuthUser = {
+  role?: string;
+};
+
 export default function CustomerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
 
   useEffect(() => {

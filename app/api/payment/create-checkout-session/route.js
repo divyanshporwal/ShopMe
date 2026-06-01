@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { getAuthUser } from "@/middleware/auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { items } = await req.json(); // ✅ THIS WAS MISSING
+    const user = await getAuthUser();
+    const { items } = await req.json();
+
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: "No items provided" }, { status: 400 });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -25,7 +31,7 @@ export async function POST(req) {
 
       metadata: {
         items: JSON.stringify(items),
-        userId: "USER_ID_HERE",
+        userId: user._id.toString(),
       },
 
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/success?session_id={CHECKOUT_SESSION_ID}`,

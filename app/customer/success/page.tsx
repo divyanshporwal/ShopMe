@@ -1,38 +1,39 @@
 
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const clearCart = useCartStore((s) => s.clearCart);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const savedCart = JSON.parse(
-      localStorage.getItem("checkout_cart") || "[]"
-    );
-
-    const saveOrder = async () => {
+    const verifyPayment = async () => {
       try {
-        const res = await fetch("/api/orders", {
+        const sessionId = searchParams.get("session_id");
+
+        if (!sessionId) {
+          setError("Payment session not found");
+          return;
+        }
+
+        const res = await fetch("/api/payment/verify", {
           method: "POST",
-          credentials: "include", // 🔥 IMPORTANT
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            items: savedCart.map((item) => ({
-              productId: item._id,
-              quantity: 1,
-              price: item.price,
-            })),
-          }),
+          body: JSON.stringify({ session_id: sessionId }),
         });
 
         const data = await res.json();
-        console.log("ORDER RESPONSE:", data);
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Payment verification failed");
+        }
 
         clearCart();
         localStorage.removeItem("checkout_cart");
@@ -40,17 +41,31 @@ export default function SuccessPage() {
         router.push("/customer/orders");
       } catch (err) {
         console.error(err);
+        setError(err instanceof Error ? err.message : "Payment verification failed");
       }
     };
 
-    if (savedCart.length > 0) {
-      saveOrder();
-    }
-  }, []);
+    verifyPayment();
+  }, [clearCart, router, searchParams]);
 
   return (
-    <h1 className="text-center mt-10">
-      Processing payment...
-    </h1>
+    <div className="min-h-screen flex items-center justify-center px-4 text-center">
+      {error ? (
+        <div>
+          <h1 className="text-2xl font-bold text-red-600">Payment verification failed</h1>
+          <p className="mt-3 text-gray-600">{error}</p>
+        </div>
+      ) : (
+        <h1 className="text-2xl font-bold text-gray-900">Processing payment...</h1>
+      )}
+    </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Processing payment...</div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }

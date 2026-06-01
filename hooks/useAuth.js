@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 
+/**
+ * @typedef {{ _id?: string; name?: string; email?: string; role?: string }} AuthUser
+ */
+
 export default function useAuth() {
+  /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 

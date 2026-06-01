@@ -3,8 +3,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Package, ShoppingBag, TrendingUp, Plus } from "lucide-react";
 
+type Product = {
+  _id: string;
+  title: string;
+  category?: string;
+  price: number;
+  images?: string[];
+  stock: number;
+};
+
 export default function MerchantDashboard() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -15,6 +15,19 @@ const SORT_OPTIONS = [
   { label: "Biggest Discount", value: "discount" },
 ];
 
+type Product = {
+  _id: string;
+  title: string;
+  brand?: string;
+  category?: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  stock?: number;
+  isSale?: boolean;
+  createdAt?: string | Date;
+};
+
 function ProductsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -27,7 +40,7 @@ function ProductsPageContent() {
   const [showSort, setShowSort] = useState(false);
 
   // ✅ FIX: products state at top
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   // ✅ FIX: fetch data properly
   useEffect(() => {
@@ -39,10 +52,10 @@ function ProductsPageContent() {
         // } else {
         //   setProducts(mockProducts); // fallback
         // }
-        const apiProducts = data.products || [];
+        const apiProducts = (data.products || []) as Product[];
 
       // ✅ merge API + mock data
-        const merged = [...apiProducts, ...mockProducts];
+        const merged = [...apiProducts, ...mockProducts] as Product[];
 
         // ✅ remove duplicates (based on _id)
         const uniqueProducts = merged.filter(
@@ -96,8 +109,8 @@ function ProductsPageContent() {
       case "newest":
         list.sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() -
-            new Date(a.createdAt).getTime()
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
         );
         break;
       case "discount":

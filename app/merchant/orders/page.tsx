@@ -9,8 +9,17 @@ const STATUS_STYLES = {
   CANCELLED: { color: "text-red-600 bg-red-50 border-red-200", icon: XCircle },
 };
 
+type MerchantOrder = {
+  _id: string;
+  productTitle: string;
+  customerName: string;
+  amount?: number;
+  status: keyof typeof STATUS_STYLES;
+  createdAt: string;
+};
+
 export default function MerchantOrders() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<MerchantOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

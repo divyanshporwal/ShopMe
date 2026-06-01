@@ -4,8 +4,18 @@ import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AuthGuard({ children, role }) {
-  const { user, loading } = useAuth();
+type AuthUser = {
+  role?: string;
+};
+
+export default function AuthGuard({
+  children,
+  role,
+}: {
+  children: React.ReactNode;
+  role?: string;
+}) {
+  const { user, loading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
 
   useEffect(() => {

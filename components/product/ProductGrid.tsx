@@ -2,9 +2,14 @@ import ProductCard from "./ProductCard";
 import ProductSkeleton from "./ProductSkeleton";
 
 interface Product {
-  id: string;
-  name: string;
-  image: string;
+  _id?: string;
+  id?: string;
+  title?: string;
+  name?: string;
+  images?: string[];
+  image?: string;
+  category?: string;
+  stock?: number;
   price: number;
   originalPrice?: number;
   discountPercent?: number;
@@ -27,7 +32,16 @@ export default function ProductGrid({ products, loading }: ProductGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((p) => (
-        <ProductCard key={p.id} {...p} />
+        <ProductCard
+          key={p._id || p.id}
+          _id={p._id || p.id || ""}
+          title={p.title || p.name || "Product"}
+          price={p.price}
+          originalPrice={p.originalPrice}
+          images={p.images || (p.image ? [p.image] : [])}
+          category={p.category}
+          stock={p.stock}
+        />
       ))}
     </div>
   );

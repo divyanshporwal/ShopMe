@@ -5,8 +5,16 @@ import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function MerchantLayout({ children }) {
-  const { user, loading } = useAuth();
+type AuthUser = {
+  role?: string;
+};
+
+export default function MerchantLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
 
   useEffect(() => {

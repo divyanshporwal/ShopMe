@@ -8,9 +8,23 @@ import { mockProducts } from "@/lib/mockData";
 
 const CATEGORIES = ["All", "Sneakers", "Apparel", "Watches", "Accessories", "Perfumes"];
 
+type Product = {
+  _id: string;
+  title: string;
+  brand?: string;
+  category?: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  merchantId?: string;
+  stock?: number;
+  createdAt?: string | Date;
+};
+
 export default function HomePage() {
   const router = useRouter();
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState<Product[]>(mockProducts as Product[]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [focused, setFocused] = useState(false);
@@ -20,8 +34,8 @@ export default function HomePage() {
     fetch("/api/products")
       .then((r) => r.json())
       .then((data) => {
-        const apiProducts = data.products || [];
-        const merged = [...apiProducts, ...mockProducts];
+        const apiProducts = (data.products || []) as Product[];
+        const merged = [...apiProducts, ...mockProducts] as Product[];
 
         const uniqueProducts = merged.filter(
           (item, index, self) =>

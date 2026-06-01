@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Eye, EyeOff, ShoppingBag, User, Store } from "lucide-react";
 
@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setLoading(true);
   setError("");
@@ -109,9 +109,9 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3 mb-6 w-full">
             <button
               type="button"
-              onClick={() => setForm({ ...form, role: "customer" })}
+              onClick={() => setForm({ ...form, role: "CUSTOMER" })}
               className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 transition-all ${
-                form.role === "customer"
+                form.role === "CUSTOMER"
                   ? "border-black bg-black text-white"
                   : "border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-300"
               }`}

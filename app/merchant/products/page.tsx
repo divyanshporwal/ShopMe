@@ -4,10 +4,21 @@ import Link from "next/link";
 import Image from "next/image";
 import { Plus, Trash2, Eye, Package } from "lucide-react";
 
+type Product = {
+  _id: string;
+  title: string;
+  brand?: string;
+  category?: string;
+  price?: number;
+  originalPrice?: number;
+  images?: string[];
+  stock?: number;
+};
+
 export default function MerchantProducts() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -25,7 +36,7 @@ export default function MerchantProducts() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Delete this product?")) return;
     setDeleting(id);
     try {
@@ -141,7 +152,7 @@ export default function MerchantProducts() {
               {/* Price */}
               <div className="col-span-2">
                 <p className="text-sm font-bold text-gray-900">
-                  ₹{product.price?.toLocaleString("en-IN")}
+                    ₹{product.price?.toLocaleString("en-IN")}
                 </p>
                 {product.originalPrice && (
                   <p className="text-xs text-gray-400 line-through">
@@ -153,9 +164,9 @@ export default function MerchantProducts() {
               {/* Stock */}
               <div className="col-span-1">
                 <span className={`text-xs font-bold ${
-                  product.stock === 0
+                    product.stock === 0
                     ? "text-red-500"
-                    : product.stock <= 3
+                    : (product.stock || 0) <= 3
                     ? "text-orange-500"
                     : "text-green-600"
                 }`}>

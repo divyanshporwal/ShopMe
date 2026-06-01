@@ -2,8 +2,22 @@
 
 import { useEffect, useState } from "react";
 
+type OrderItem = {
+  productId?: {
+    title?: string;
+  };
+  quantity: number;
+  price: number;
+};
+
+type Order = {
+  _id: string;
+  status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED";
+  items: OrderItem[];
+};
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
