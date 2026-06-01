@@ -34,7 +34,7 @@ export async function POST(req) {
         price: item.price,
       })),
       totalAmount: session.amount_total / 100,
-      status: "PAID",
+      status: "SUCCESS",
       paymentId: session.payment_intent,
       paymentStatus: "SUCCESS",
     });

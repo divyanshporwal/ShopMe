@@ -1,3 +1,4 @@
+// checkout/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -5,26 +6,60 @@ import { useCartStore } from "@/store/cartStore";
 import { Loader2, CreditCard } from "lucide-react";
 
 export default function CheckoutPage() {
-  const cart = useCartStore((s) => s.cart);
+  // Get all required values directly from Zustand store
+  const {
+    cart,
+    promoApplied,
+    promoCode,
+    subtotal: getSubtotal,
+    shipping: getShipping,
+    promoDiscount: getPromoDiscount,
+    totalPrice: getTotalPrice,
+  } = useCartStore();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const total = cart.reduce((acc, item) => acc + item.price, 0);
+  // Use the same helper functions from the store
+  // This guarantees Cart Page and Checkout Page always show identical values
+  const subtotal = getSubtotal();
+  const shipping = getShipping();
+  const promoDiscount = getPromoDiscount();
+  const total = getTotalPrice();
 
   const handlePayment = async () => {
     try {
       setLoading(true);
       setError("");
-      localStorage.setItem("checkout_cart", JSON.stringify(cart));
 
+      // Save checkout data locally (optional)
+      localStorage.setItem(
+        "checkout_cart",
+        JSON.stringify({
+          cart,
+          promoApplied,
+          promoCode,
+          subtotal,
+          shipping,
+          promoDiscount,
+          total,
+        })
+      );
+
+      // Send the exact same values to your payment API
       const res = await fetch("/api/payment/create-checkout-session", {
-
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            items: cart, // ✅ IMPORTANT
+          items: cart,
+          promoApplied,
+          promoCode,
+          subtotal,
+          shipping,
+          promoDiscount,
+          total,
         }),
       });
 
@@ -34,6 +69,7 @@ export default function CheckoutPage() {
         throw new Error("Failed to initiate payment");
       }
 
+      // Redirect to Stripe Checkout
       window.location.href = data.url;
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -45,7 +81,6 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-lg p-8">
-
         {/* Title */}
         <h1 className="text-2xl font-black text-gray-900 mb-6 text-center">
           Checkout
@@ -63,23 +98,59 @@ export default function CheckoutPage() {
                   {item.title}
                 </p>
                 <p className="text-xs text-gray-400">
-                  ₹{item.price}
+                  ₹{item.price.toLocaleString("en-IN")} × {item.quantity}
                 </p>
               </div>
 
               <p className="font-bold text-gray-900">
-                ₹{item.price}
+                ₹{(item.price * item.quantity).toLocaleString("en-IN")}
               </p>
             </div>
           ))}
         </div>
 
+        {/* Price Breakdown */}
+        <div className="space-y-3 mb-6 border-t border-b py-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Subtotal</span>
+            <span className="font-semibold">
+              ₹{subtotal.toLocaleString("en-IN")}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Shipping</span>
+            <span className="font-semibold">
+              {shipping === 0 ? "FREE" : `₹${shipping}`}
+            </span>
+          </div>
+
+          {/* Promo Discount */}
+          {promoApplied && (
+            <div className="flex justify-between text-sm">
+              <span className="text-purple-600 font-semibold">
+                {promoCode} (10% OFF)
+              </span>
+              <span className="font-semibold text-purple-600">
+                -₹{promoDiscount.toLocaleString("en-IN")}
+              </span>
+            </div>
+          )}
+        </div>
+
         {/* Total */}
         <div className="flex justify-between items-center mb-6">
           <span className="text-gray-500 text-sm">Total Amount</span>
-          <span className="text-3xl font-black text-gray-900">
-            ₹{total.toLocaleString("en-IN")}
-          </span>
+          <div className="text-right">
+            <span className="text-3xl font-black text-gray-900">
+              ₹{total.toLocaleString("en-IN")}
+            </span>
+            {promoApplied && (
+              <p className="text-xs text-purple-600 font-semibold mt-1">
+                10% promo applied ✓
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Error */}
@@ -107,12 +178,12 @@ export default function CheckoutPage() {
           ) : (
             <>
               <CreditCard className="w-5 h-5" />
-              Pay Now
+              Pay ₹{total.toLocaleString("en-IN")}
             </>
           )}
         </button>
 
-        {/* Footer Info */}
+        {/* Footer */}
         <p className="text-xs text-gray-400 text-center mt-6">
           Secure payments powered by Stripe
         </p>
