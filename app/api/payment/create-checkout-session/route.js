@@ -1,17 +1,41 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAuthUser } from "@/middleware/auth";
+import { connectDB } from "@/lib/db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+
+  return new Stripe(secretKey);
+}
+
+function getBaseUrl() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_BASE_URL is not configured");
+  }
+
+  return baseUrl;
+}
 
 export async function POST(req) {
   try {
+    await connectDB();
+
     const user = await getAuthUser();
     const { items } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
+
+    const stripe = getStripe();
+    const baseUrl = getBaseUrl();
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -34,9 +58,9 @@ export async function POST(req) {
         userId: user._id.toString(),
       },
 
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/customer/success?session_id={CHECKOUT_SESSION_ID}`,
 
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/cart`,
+      cancel_url: `${baseUrl}/customer/cart`,
     });
 
     return NextResponse.json({ url: session.url });
