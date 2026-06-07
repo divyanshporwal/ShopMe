@@ -1,16 +1,7 @@
-import Order from "@/models/order.model";
+import { createOrderWithInventory } from "@/controllers/order.controller";
 
 export const createOrder = async (items, user) => {
-  const totalAmount = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-
-  const order = await Order.create({
-    userId: user._id,
-    items,
-    totalAmount,
-    status: "PAID",
+  const order = await createOrderWithInventory(items, user, {
     paymentStatus: "SUCCESS",
   });
 

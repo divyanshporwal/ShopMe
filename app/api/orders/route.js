@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import Order from "@/models/order.model";
 import { getAuthUser } from "@/middleware/auth";
+import { createOrderWithInventory } from "@/controllers/order.controller";
 
 export async function POST(req) {
   try {
@@ -15,18 +16,7 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    console.log("BODY:", body);
-
-    const totalAmount = body.items.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-
-    const newOrder = await Order.create({
-      userId: user._id,
-      items: body.items,
-      totalAmount,
-      status: "PENDING",
+    const newOrder = await createOrderWithInventory(body.items, user, {
       paymentStatus: "SUCCESS",
     });
 
@@ -43,7 +33,6 @@ export async function GET(req) {
     await connectDB();
 
     const user = await getAuthUser(req);
-    console.log("USER:", user); // 👈 ADD THIS
 
     if (!user) {
       return NextResponse.json(

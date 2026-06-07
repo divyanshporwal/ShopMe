@@ -90,7 +90,7 @@ export default function OrdersPage() {
                 className={`px-3 py-1 text-xs font-semibold rounded-full ${
                   order.status === "DELIVERED"
                     ? "bg-green-100 text-green-700"
-                    : order.status === "SHIPPED"
+                    : order.status === "SHIPPED" || order.status === "PAID"
                     ? "bg-blue-100 text-blue-700"
                     : order.status === "PENDING"
                     ? "bg-yellow-100 text-yellow-700"

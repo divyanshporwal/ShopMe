@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/order.model";
+import { createOrderWithInventory } from "@/controllers/order.controller";
 
 type CheckoutItem = {
   _id: string;
@@ -47,24 +48,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Invalid payment session" }, { status: 400 });
     }
 
-    // جلوگیری از duplicate order
+    // duplicate order
     const existing = await Order.findOne({ paymentId });
     if (existing) {
       return NextResponse.json({ success: true, order: existing });
     }
 
-    const order = await Order.create({
-      userId,
-      items: items.map((item) => ({
-        productId: item._id,
-        quantity: item.quantity || 1,
-        price: item.price,
-      })),
-      totalAmount: session.amount_total / 100,
-      status: "PAID",
-      paymentId,
-      paymentStatus: "SUCCESS",
-    });
+    const order = await createOrderWithInventory(
+      items,
+      { _id: userId },
+      {
+        paymentId,
+        paymentStatus: "SUCCESS",
+      }
+    );
 
     return NextResponse.json({ success: true, order });
 
