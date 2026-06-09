@@ -2,7 +2,7 @@
 import Link from "next/link";
 import {
   Search, ShoppingBag, User, ChevronDown,
-  MapPin, LogOut, LayoutDashboard, Store,
+  MapPin, LogOut, LayoutDashboard, Store, Menu, ChevronRight
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -32,6 +32,7 @@ export default function Navbar() {
   const [user, setUser] = useState<UserType | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
@@ -97,41 +98,42 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white">
       {/* Announcement bar */}
-      <div className="bg-black text-white text-center text-xs py-2 tracking-wide font-medium">
-        🎉 FREE SHIPPING on orders above ₹999 &nbsp;|&nbsp; Use code{" "}
-        <span className="text-yellow-400 font-bold">SHOPME10</span> for 10% off
+      <div className="bg-black text-white text-center text-[11px] md:text-xs py-[5px] px-[12px] md:py-2 md:px-0 tracking-wide font-medium flex flex-wrap justify-center items-center gap-x-1 leading-[1.5]">
+        <span>🎉 FREE SHIPPING on orders above ₹999</span>
+        <span className="hidden md:inline">&nbsp;|&nbsp;</span>
+        <span>Use code{" "}<span className="text-yellow-400 font-bold">SHOPME10</span> for 10% off</span>
       </div>
 
       {/* Main navbar */}
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center gap-6 border-b border-gray-200">
+      <div className="w-full max-w-[1400px] mx-auto px-4 py-2 md:px-6 md:py-0 md:h-16 flex items-center gap-2 md:gap-6 border-b border-gray-200 relative">
         {/* Logo */}
-        <Link href="/" className="shrink-0">
+        <Link href="/customer/products" className="shrink-0 mr-2 md:mr-0">
           <div className="flex flex-col leading-none">
-            <span className="text-[11px] font-semibold tracking-[0.3em] text-gray-500 uppercase">
+            <span className="text-[9px] md:text-[11px] font-semibold tracking-[0.3em] text-gray-500 uppercase">
               Shop
             </span>
-            <span className="text-[22px] font-black tracking-tight text-black leading-none">
+            <span className="text-[18px] md:text-[22px] font-black tracking-tight text-black leading-none">
               ME
             </span>
           </div>
         </Link>
 
         {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-2xl relative">
-          <div className={`flex items-center border-2 rounded-full px-4 py-2.5 gap-3 bg-gray-50 transition-all duration-200 ${
-            focused ? "border-black bg-white shadow-md" : "border-gray-200"
+        <form onSubmit={handleSearch} className="flex-1 min-w-0 max-w-[calc(100%-100px)] md:max-w-2xl relative">
+          <div className={`flex items-center border border-gray-200 md:border-2 rounded-[20px] md:rounded-full px-3 md:px-4 py-0 h-[36px] md:h-auto md:py-2.5 gap-2 md:gap-3 bg-gray-50 transition-all duration-200 ${
+            focused ? "border-black bg-white shadow-md" : ""
           }`}>
             <button type="submit">
               <Search className="w-4 h-4 text-gray-400 hover:text-black shrink-0 transition" />
             </button>
             <input
               type="text"
-              placeholder="Search for brands, products..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder-gray-400"
+              className="flex-1 bg-transparent text-[13px] md:text-sm outline-none text-gray-800 placeholder-gray-400 min-w-0"
             />
             {search && (
               <button
@@ -143,8 +145,8 @@ export default function Navbar() {
           </div>
         </form>
 
-        {/* Right section */}
-        <div className="flex items-center ml-auto shrink-0 divide-x divide-gray-200 border-l border-gray-200">
+        {/* Right section - Hidden on mobile */}
+        <div className="hidden md:flex items-center ml-auto shrink-0 divide-x divide-gray-200 border-l border-gray-200">
 
           {userLoading ? (
             <div className="flex items-center gap-3 px-5 h-16">
@@ -213,8 +215,19 @@ export default function Navbar() {
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
                       >
                         <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                        {user.role === "CUSTOMER" ? "My Orders" : "Dashboard"}
+                        My Dashboard
                       </Link>
+
+                      {user.role === "CUSTOMER" && (
+                        <Link
+                          href="/customer/orders"
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-gray-400" />
+                          My Orders
+                        </Link>
+                      )}
 
                       {user.role === "MERCHANT" && (
                         <Link
@@ -312,12 +325,96 @@ export default function Navbar() {
             </>
           )}
         </div>
+
+        {/* Hamburger Icon */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden shrink-0 ml-2 text-black"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden absolute left-0 right-0 top-full bg-white z-50 shadow-xl border-t border-gray-200 overflow-hidden">
+          <div className="flex flex-col">
+            {user ? (
+              <div className="flex flex-col">
+                {user.name && (
+                  <div className="bg-gray-50 px-5 py-4 border-b-2 border-gray-200">
+                    <p className="text-[13px] text-gray-500 font-normal">Hello,</p>
+                    <p className="text-[17px] text-gray-900 font-bold capitalize">{user.name}</p>
+                  </div>
+                )}
+                <Link
+                  href={getDashboardLink()}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                >
+                  My Dashboard
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </Link>
+                {user.role === "CUSTOMER" && (
+                  <>
+                    <Link
+                      href="/customer/orders"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                    >
+                      My Orders
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                    <Link
+                      href="/customer/cart"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                    >
+                      <div className="flex items-center gap-2">
+                        My Cart
+                        {totalItems > 0 && <span className="text-blue-600 font-bold">({totalItems})</span>}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                  </>
+                )}
+                <div className="border-t-2 border-gray-200 mt-1" />
+                <button
+                  onClick={handleLogout}
+                  className="text-red-500 font-semibold px-5 py-[15px] flex items-center gap-2 hover:bg-red-50 active:bg-red-100 cursor-pointer w-full"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col pb-2">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                >
+                  Login
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                >
+                  Register
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Category nav */}
       <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6">
-          <ul className="flex items-center w-full">
+        <div className="max-w-[1400px] mx-auto md:px-6">
+          <ul className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none]">
             {NAV_LINKS.map((link, index) => {
               const active = isActive(link);
               return (
@@ -327,7 +424,7 @@ export default function Navbar() {
                   )}
                   <Link
                     href={link.href}
-                    className={`flex-1 flex items-center justify-center py-3.5 text-[13px] font-semibold tracking-wider whitespace-nowrap border-b-2 transition-all duration-150
+                    className={`shrink-0 flex items-center justify-center px-3.5 md:px-0 py-2 md:py-3.5 text-[12px] md:text-[13px] font-semibold tracking-wider whitespace-nowrap border-b-2 transition-all duration-150 md:flex-1
                       ${active
                         ? "text-black border-black"
                         : link.sale

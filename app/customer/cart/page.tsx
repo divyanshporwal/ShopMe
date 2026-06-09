@@ -75,9 +75,9 @@ export default function CartPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-12 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8">
         {/* Cart items — left */}
-        <div className="col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-4">
           {cart.map((item: any) => (
             <div
               key={item._id}
@@ -182,7 +182,7 @@ export default function CartPage() {
         </div>
 
         {/* Order summary — right */}
-        <div className="col-span-4">
+        <div className="lg:col-span-4">
           <div className="bg-white border border-gray-200 rounded-2xl p-6 sticky top-32 space-y-5">
             <h2 className="text-base font-black text-gray-900">Order Summary</h2>
 
@@ -316,8 +316,8 @@ export default function CartPage() {
                 { icon: "✅", label: "Authentic" },
               ].map((badge) => (
                 <div key={badge.label} className="flex flex-col items-center gap-1 text-center">
-                  <span className="text-lg">{badge.icon}</span>
-                  <span className="text-[10px] text-gray-400 font-medium">{badge.label}</span>
+                  <span className="text-lg md:text-xl">{badge.icon}</span>
+                  <span className="text-[10px] md:text-[11px] text-gray-400 font-medium">{badge.label}</span>
                 </div>
               ))}
             </div>

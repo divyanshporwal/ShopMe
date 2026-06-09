@@ -43,7 +43,7 @@ export default function LoginPage() {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full md:max-w-md m-0 md:mx-4 max-h-[calc(100vh-32px)] md:max-h-none overflow-y-auto bg-white rounded-3xl shadow-2xl">
         {/* Top accent bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-black via-gray-600 to-black" />
 
@@ -169,7 +169,7 @@ export default function LoginPage() {
               onClick={() => router.push("/auth/register")}
               className="text-black font-bold hover:underline underline-offset-4 transition"
             >
-              Create one free →
+              Create an account →
             </button>
           </p>
         </div>

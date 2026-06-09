@@ -63,14 +63,14 @@ export default function ProductCard({
 
         {/* Discount badge */}
         {discount && (
-          <div className="absolute top-3 left-3 z-10 bg-white text-blue-600 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-blue-100">
+          <div className="absolute top-2 left-2 md:top-3 md:left-3 z-10 bg-white text-blue-600 text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded-full shadow-sm border border-blue-100 whitespace-nowrap">
             UPTO {discount}% OFF
           </div>
         )}
 
         {/* Stock warning */}
         {stock && stock <= 3 && (
-          <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">
+          <div className="absolute top-2 right-2 md:top-3 md:right-3 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">
             Only {stock} left
           </div>
         )}
@@ -107,7 +107,7 @@ export default function ProductCard({
         {/* Wishlist button */}
         <button
           onClick={handleWishlist}
-          className="absolute bottom-3 right-3 z-20 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 text-gray-400 hover:text-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+          className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 text-gray-400 hover:text-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
         >
           <Heart className="w-4 h-4" />
         </button>
@@ -122,26 +122,26 @@ export default function ProductCard({
       </div>
 
       {/* Info */}
-      <div className="mt-3 px-1">
+      <div className="mt-3 px-1 md:px-2 pb-1 md:pb-2">
         {category && (
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
             {category}
           </p>
         )}
-        <p className="text-sm font-semibold text-gray-900 truncate leading-snug">
+        <p className="text-sm font-semibold text-gray-900 break-words leading-tight">
           {title}
         </p>
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-base font-black text-gray-900">
+        <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-1.5">
+          <span className="text-sm md:text-base font-black text-gray-900">
             ₹{price.toLocaleString("en-IN")}
           </span>
           {originalPrice && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-[10px] md:text-xs text-gray-400 line-through">
               ₹{originalPrice.toLocaleString("en-IN")}
             </span>
           )}
           {discount && (
-            <span className="text-xs font-bold text-green-600">
+            <span className="text-[10px] md:text-xs font-bold text-green-600 whitespace-nowrap px-1.5 py-0.5">
               {discount}% off
             </span>
           )}

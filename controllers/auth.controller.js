@@ -1,11 +1,16 @@
 import User from "@/models/user.model";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/jwt";
+import { passwordErrorMessage, validatePassword } from "@/utils/validators";
 
 export const registerUser = async ({ name, email, password }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error("User already exists");
+  }
+
+  if (!validatePassword(password)) {
+    throw new Error(passwordErrorMessage);
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);

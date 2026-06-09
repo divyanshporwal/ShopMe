@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, Check } from "lucide-react";
 import ProductCard from "@/components/product/ProductCard";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import { mockProducts } from "@/lib/mockData";
@@ -38,6 +38,19 @@ function ProductsPageContent() {
 
   const [sortBy, setSortBy] = useState("relevance");
   const [showSort, setShowSort] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setShowSort(false);
+      }
+    };
+    if (showSort) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSort]);
 
   // ✅ FIX: products state at top
   const [products, setProducts] = useState<Product[]>([]);
@@ -136,52 +149,61 @@ function ProductsPageContent() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-gray-900">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-black text-gray-900">
           {urlSearch
             ? `Results for "${urlSearch}"`
             : urlSale
             ? "Sale"
             : activeCategory || "All Products"}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-xs md:text-sm text-gray-500 mt-1">
           Showing {filtered.length} results
         </p>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4 flex-wrap">
-        <div className="relative">
+      <div className="flex items-center gap-3 mb-4 md:mb-6 border-b border-gray-100 pb-4 flex-wrap">
+        <div className="relative w-full sm:w-auto min-w-0 sm:min-w-[150px]" ref={sortRef}>
           <button
             onClick={() => setShowSort(!showSort)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-gray-300 text-sm font-semibold hover:border-black bg-white"
+            className={`flex items-center justify-between w-full sm:w-auto min-w-[180px] gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium text-gray-900 cursor-pointer transition-all duration-200 ${
+              showSort
+                ? "border-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+                : "border-gray-300 shadow-sm hover:border-gray-400 hover:shadow-md"
+            }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
-            Sort: {activeSortLabel}
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-gray-500" />
+              <span>Sort: {activeSortLabel}</span>
+            </div>
             <ChevronDown
-              className={`w-3.5 h-3.5 ${
+              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
                 showSort ? "rotate-180" : ""
               }`}
             />
           </button>
 
           {showSort && (
-            <div className="absolute top-12 left-0 z-50 bg-white border rounded-2xl shadow-xl p-2 min-w-[200px]">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => {
-                    setSortBy(opt.value);
-                    setShowSort(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 rounded-xl text-sm ${
-                    sortBy === opt.value
-                      ? "bg-black text-white"
-                      : "hover:bg-gray-50"
-                  }`}
-                >
-                  {opt.label}
-                </button>
+            <div className="absolute top-[calc(100%+8px)] left-0 z-50 bg-white border border-gray-200 rounded-[14px] p-1.5 w-full sm:w-auto min-w-[200px] sm:min-w-[220px] shadow-[0_10px_40px_rgba(0,0,0,0.14),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden sort-dropdown">
+              {SORT_OPTIONS.map((opt, index) => (
+                <div key={opt.value}>
+                  {(index === 1 || index === 3) && <div className="border-t border-gray-100 my-1" />}
+                  <button
+                    onClick={() => {
+                      setSortBy(opt.value);
+                      setShowSort(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${
+                      sortBy === opt.value
+                        ? "bg-gray-900 text-white font-semibold"
+                        : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900 hover:font-medium"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    {sortBy === opt.value && <Check className="w-4 h-4 text-white" />}
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -213,7 +235,7 @@ function ProductsPageContent() {
           <h3 className="text-xl font-bold">No products found</h3>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-5">
           {filtered.map((product) => (
             <ProductCard key={product._id} {...product} />
           ))}
@@ -225,7 +247,7 @@ function ProductsPageContent() {
 
 function ProductsLoadingFallback() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-5">
       {Array.from({ length: 8 }).map((_, i) => (
         <ProductSkeleton key={i} />
       ))}
