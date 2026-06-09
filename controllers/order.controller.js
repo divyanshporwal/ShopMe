@@ -1,5 +1,6 @@
 import Order from "@/models/order.model";
 import Product from "@/models/product.model";
+import mongoose from "mongoose";
 
 const MERCHANT_ORDER_STATUSES = ["PENDING", "PAID", "SHIPPED", "DELIVERED"];
 
@@ -11,7 +12,8 @@ const buildOrderFromItems = async (items, user, options = {}) => {
   const productIds = items
     .map(getItemProductId)
     .filter(Boolean)
-    .map((id) => id.toString());
+    .map((id) => id.toString())
+    .filter((id) => mongoose.Types.ObjectId.isValid(id));
 
   if (productIds.length === 0) {
     throw new Error("No valid items provided");
@@ -56,7 +58,7 @@ const decrementProductStock = async (items) => {
       const productId = getItemProductId(item)?.toString();
       const quantity = Number(item.quantity || 1);
 
-      if (!productId || quantity <= 0) {
+      if (!productId || !mongoose.Types.ObjectId.isValid(productId) || quantity <= 0) {
         return null;
       }
 

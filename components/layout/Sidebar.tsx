@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
 import toast from "react-hot-toast";
 import showToast from "@/lib/toast";
 import {
@@ -87,7 +86,6 @@ export default function Sidebar({ role = "merchant" }) {
         <button
           onClick={async () => {
             await fetch("/api/auth/logout", { method: "POST" });
-            useAuthStore.getState().logout();
             showToast.success('You have been signed out. See you soon!', { duration: 3000 });
             router.push("/auth/login");
           }}
