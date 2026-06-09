@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
+import toast from "react-hot-toast";
+import showToast from "@/lib/toast";
 import {
   LayoutDashboard,
   Package,
@@ -28,6 +31,7 @@ const ADMIN_LINKS = [
 
 export default function Sidebar({ role = "merchant" }) {
   const pathname = usePathname();
+  const router = useRouter();
   const links = role === "admin" ? ADMIN_LINKS : MERCHANT_LINKS;
   const base = role === "admin" ? "/admin" : "/merchant";
 
@@ -83,9 +87,11 @@ export default function Sidebar({ role = "merchant" }) {
         <button
           onClick={async () => {
             await fetch("/api/auth/logout", { method: "POST" });
-            window.location.href = "/";
+            useAuthStore.getState().logout();
+            showToast.success('You have been signed out. See you soon!', { duration: 3000 });
+            router.push("/auth/login");
           }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout

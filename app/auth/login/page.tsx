@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Eye, EyeOff, ShoppingBag } from "lucide-react";
+import toast from "react-hot-toast";
+import showToast from "@/lib/toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,22 +17,35 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const toastId = toast.loading("Signing in...");
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(form),
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(form),
+        headers: { "Content-Type": "application/json" },
+      });
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
 
-    if (res.ok) {
-      if (data.user.role === "ADMIN") router.push("/admin/dashboard");
-      else if (data.user.role === "MERCHANT") router.push("/merchant/dashboard");
-      else router.push("/customer/products");
-    } else {
-      setError(data.message || "Invalid credentials");
+      if (res.ok) {
+        toast.dismiss(toastId);
+        showToast.success("Welcome back! You are now signed in.", { duration: 3000 });
+        if (data.user.role === "ADMIN") router.push("/admin/dashboard");
+        else if (data.user.role === "MERCHANT") router.push("/merchant/dashboard");
+        else router.push("/customer/products");
+      } else {
+        const errorMsg = data.message || "Invalid credentials";
+        setError(errorMsg);
+        toast.dismiss(toastId);
+        showToast.error("Invalid email or password.");
+      }
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+      toast.dismiss(toastId);
+      showToast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,6 +126,7 @@ export default function LoginPage() {
                 </label>
                 <button
                   type="button"
+                  onClick={() => router.push("/auth/forgot-password")}
                   className="text-xs text-gray-400 hover:text-black transition font-medium"
                 >
                   Forgot password?

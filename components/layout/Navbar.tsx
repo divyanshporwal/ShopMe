@@ -7,6 +7,8 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
+import toast from "react-hot-toast";
+import showToast from "@/lib/toast";
 
 const NAV_LINKS = [
   { label: "ALL", href: "/customer/products", category: "" },
@@ -72,6 +74,7 @@ export default function Navbar() {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setShowDropdown(false);
+    showToast.success('You have been signed out. See you soon!', { duration: 3000 });
     router.push("/");
     router.refresh();
   };

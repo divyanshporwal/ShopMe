@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Eye, EyeOff, ShoppingBag, User, Store } from "lucide-react";
+import toast from "react-hot-toast";
+import showToast from "@/lib/toast";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function RegisterPage() {
   e.preventDefault();
   setLoading(true);
   setError("");
+  const toastId = toast.loading("Creating account...");
 
   try {
     const res = await fetch("/api/auth/register", {
@@ -41,14 +44,19 @@ export default function RegisterPage() {
     }
 
     if (!res.ok) {
-      setError(data?.message || "Server error");
+      const errorMsg = data?.message || "Server error";
+      setError(errorMsg);
+      toast.dismiss(toastId);
+      showToast.error(errorMsg);
       return;
     }
 
     if (form.role === "MERCHANT") {
-      alert("Request sent for admin approval");
+      toast.dismiss(toastId);
+      showToast.success("Request sent for admin approval", { duration: 4000 });
     } else {
-      alert("Account created successfully");
+      toast.dismiss(toastId);
+      showToast.success("Account created successfully! Welcome to ShopMe 🎉", { duration: 4000 });
     }
 
     router.push("/customer/products");
@@ -56,30 +64,31 @@ export default function RegisterPage() {
   } catch (err) {
     console.error("REGISTER ERROR:", err);
     setError("Something went wrong. Try again.");
+    toast.dismiss(toastId);
+    showToast.error("Something went wrong. Please try again.");
   } finally {
     setLoading(false);
   }
 };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 overflow-y-auto flex items-start justify-center py-10 px-4 z-50 register-overlay [-webkit-overflow-scrolling:touch]">
       {/* backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 backdrop-blur-sm"
         onClick={() => router.back()}
       />
 
       {/* modal */}
-      <div className="relative w-full md:max-w-md m-0 md:mx-auto max-h-[calc(100vh-32px)] md:max-h-none overflow-y-auto bg-white rounded-3xl shadow-2xl">
-        <div className="h-1.5 w-full bg-gradient-to-r from-black via-gray-600 to-black" />
+      <div className="relative bg-white rounded-2xl w-full max-w-[460px] p-8 m-auto shadow-2xl overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-gradient-to-r from-black via-gray-600 to-black" />
 
-        <div className="p-8">
-          <button
-            onClick={() => router.back()}
-            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition"
-          >
-            <X className="w-4 h-4 text-gray-600" />
-          </button>
+        <button
+          onClick={() => router.back()}
+          className="absolute top-5 right-5 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition"
+        >
+          <X className="w-4 h-4 text-gray-600" />
+        </button>
 
           {/* Header */}
           <div className="mb-7">
@@ -176,9 +185,14 @@ export default function RegisterPage() {
                 type="text"
                 placeholder="John Doe"
                 required
+                pattern="[A-Za-z]+"
+                maxLength={50}
                 value={form.name}
                 onChange={(e) =>
-                  setForm({ ...form, name: e.target.value })
+                  setForm({
+                    ...form,
+                    name: e.target.value.replace(/[^A-Za-z]/g, ""),
+                  })
                 }
                 className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-300 bg-gray-50 focus:outline-none focus:border-black focus:bg-white transition"
               />
@@ -270,7 +284,6 @@ export default function RegisterPage() {
             </button>
           </p>
         </div>
-      </div>
     </div>
   );
 }

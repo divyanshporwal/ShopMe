@@ -21,6 +21,26 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    otpCode: {
+      type: String,
+      default: null,
+    },
+    otpExpiry: {
+      type: Number,
+      default: null,
+    },
+    otpAttempts: {
+      type: Number,
+      default: 0,
+    },
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpiry: {
+      type: Number,
+      default: null,
+    },
   },
   { timestamps: true }
 );

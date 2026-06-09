@@ -3,7 +3,12 @@ import User from "@/models/user.model";
 import MerchantRequest from "@/models/merchantRequest.model";
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
-import { passwordErrorMessage, validatePassword } from "@/utils/validators";
+import {
+  nameErrorMessage,
+  passwordErrorMessage,
+  validateName,
+  validatePassword,
+} from "@/utils/validators";
 import { signToken } from "@/lib/jwt";
 
 export async function POST(req) {
@@ -15,6 +20,13 @@ export async function POST(req) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, message: "All fields required" },
+        { status: 400 }
+      );
+    }
+
+    if (!validateName(name)) {
+      return NextResponse.json(
+        { success: false, message: nameErrorMessage },
         { status: 400 }
       );
     }

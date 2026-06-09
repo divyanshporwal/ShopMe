@@ -2,6 +2,13 @@ export const validateEmail = (email) => {
   return /\S+@\S+\.\S+/.test(email);
 };
 
+export const validateName = (name) => {
+  return /^[A-Za-z]+$/.test(name);
+};
+
+export const nameErrorMessage =
+  "Full Name must contain only letters from A to Z";
+
 export const validatePassword = (password) => {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,15}$/.test(
     password
