@@ -57,13 +57,41 @@ const userSchema = new mongoose.Schema(
       addressType: String,
       isDefault:   { type: Boolean, default: false },
     }],
+    // Which dashboard view the user is currently in
+    activeView: {
+      type: String,
+      enum: ['CUSTOMER', 'MERCHANT'],
+      default: 'CUSTOMER',
+    },
+    // All roles this user holds (supports dual-role: CUSTOMER + MERCHANT)
+    roles: {
+      type: [String],
+      default: ['CUSTOMER'],
+    },
+    // Embedded merchant application request
+    merchantRequest: {
+      status: {
+        type: String,
+        enum: ['none', 'pending', 'approved', 'rejected'],
+        default: 'none',
+      },
+      requestedAt:     { type: Date,   default: null },
+      reviewedAt:      { type: Date,   default: null },
+      reviewedBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      rejectionReason: { type: String, default: null },
+      businessName:    { type: String, default: null },
+      businessType:    { type: String, default: null },
+      businessEmail:   { type: String, default: null },
+      businessPhone:   { type: String, default: null },
+      businessAddress: { type: String, default: null },
+      description:     { type: String, default: null },
+    },
   },
   { timestamps: true }
 );
 
-if (mongoose.models.User && (!mongoose.models.User.schema.path('wishlist') || !mongoose.models.User.schema.path('savedAddresses'))) {
-  delete mongoose.models.User;
-}
+// Force model re-registration when schema changes
+delete mongoose.models.User;
 
 export default mongoose.models.User ||
   mongoose.model("User", userSchema);

@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, X, ChevronDown, Check } from "lucide-react";
 import ProductCard from "@/components/product/ProductCard";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
-import { mockProducts } from "@/lib/mockData";
 
 const SORT_OPTIONS = [
   { label: "Relevance", value: "relevance" },
@@ -81,30 +80,14 @@ function ProductsPageContent() {
     initAuthAndWishlist();
   }, []);
 
-  // ✅ FIX: fetch data properly
+  // Fetch products from MongoDB
   useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
-        // if (data.products?.length) {
-        //   setProducts(data.products);
-        // } else {
-        //   setProducts(mockProducts); // fallback
-        // }
-        const apiProducts = (data.products || []) as Product[];
-
-      // ✅ merge API + mock data
-        const merged = [...apiProducts, ...mockProducts] as Product[];
-
-        // ✅ remove duplicates (based on _id)
-        const uniqueProducts = merged.filter(
-          (item, index, self) =>
-            index === self.findIndex((p) => p._id === item._id)
-        );
-
-        setProducts(uniqueProducts);
+        setProducts((data.products || []) as Product[]);
       })
-      .catch(() => setProducts(mockProducts));
+      .catch(() => setProducts([]));
   }, []);
 
   const clearCategory = () => {

@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Trash2 } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
+import showToast from "@/lib/toast";
 
 const ROLE_STYLES = {
   ADMIN: "text-purple-600 bg-purple-50 border-purple-200",
@@ -14,6 +16,16 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
 
+  // Get current logged-in user
+  const { user: currentUser } = useAuth();
+
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    userId: null,
+    userName: "",
+  });
+
   useEffect(() => {
     fetch("/api/admin/users")
       .then((r) => r.json())
@@ -22,6 +34,68 @@ export default function AdminUsers() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleRoleChange = async (userId, newRole) => {
+    const userToUpdate = users.find((u) => u._id === userId);
+    const oldRole = userToUpdate?.role;
+
+    // Optimistic update
+    setUsers((prev) =>
+      prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u))
+    );
+
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Revert on error
+        setUsers((prev) =>
+          prev.map((u) => (u._id === userId ? { ...u, role: oldRole } : u))
+        );
+        showToast.error(data.error || "Failed to update role");
+        return;
+      }
+
+      showToast.success(`${userToUpdate?.name}'s role updated to ${newRole}`);
+    } catch (err) {
+      setUsers((prev) =>
+        prev.map((u) => (u._id === userId ? { ...u, role: oldRole } : u))
+      );
+      showToast.error("Something went wrong");
+    }
+  };
+
+  const handleDeleteUser = (userId, userName) => {
+    setConfirmModal({ open: true, userId, userName });
+  };
+
+  const confirmDelete = async () => {
+    const { userId, userName } = confirmModal;
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast.error(data.error || "Failed to remove user");
+        return;
+      }
+
+      setUsers((prev) => prev.filter((u) => u._id !== userId));
+      showToast.success(`${userName} has been removed`);
+      setConfirmModal({ open: false, userId: null, userName: "" });
+    } catch (err) {
+      showToast.error("Failed to remove user");
+    }
+  };
 
   const filtered = users.filter((u) => {
     const matchesFilter = filter === "ALL" || u.role === filter;
@@ -95,10 +169,11 @@ export default function AdminUsers() {
           <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden">
             {/* Table header */}
             <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
-              <div className="col-span-4">User</div>
-              <div className="col-span-4">Email</div>
+              <div className="col-span-3">User</div>
+              <div className="col-span-3">Email</div>
               <div className="col-span-2">Role</div>
               <div className="col-span-2">Joined</div>
+              <div className="col-span-2 text-right">Actions</div>
             </div>
 
             {filtered.map((user) => (
@@ -107,14 +182,14 @@ export default function AdminUsers() {
                 className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
               >
                 {/* Name + avatar */}
-                <div className="col-span-4 flex items-center gap-3">
+                <div className="col-span-3 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
                     <span className="text-white text-xs font-bold">
                       {user.name?.[0]?.toUpperCase() || "?"}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
                       {user.name || "—"}
                     </p>
                     {user.isApproved && (
@@ -126,7 +201,7 @@ export default function AdminUsers() {
                 </div>
 
                 {/* Email */}
-                <div className="col-span-4">
+                <div className="col-span-3">
                   <p className="text-sm text-gray-600 truncate">{user.email}</p>
                 </div>
 
@@ -144,8 +219,32 @@ export default function AdminUsers() {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
+                      timeZone: "Asia/Kolkata",
                     })}
                   </p>
+                </div>
+
+                {/* Actions */}
+                <div className="col-span-2 flex items-center justify-end gap-2">
+                  <select
+                    value={user.role}
+                    disabled={user._id === currentUser?._id}
+                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                    className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 bg-white hover:border-gray-400 focus:outline-none transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="MERCHANT">Merchant</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+
+                  <button
+                    onClick={() => handleDeleteUser(user._id, user.name)}
+                    disabled={user._id === currentUser?._id}
+                    className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    title="Remove"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -193,14 +292,67 @@ export default function AdminUsers() {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
+                        timeZone: "Asia/Kolkata",
                       })}
                     </span>
                   </div>
+                </div>
+
+                {/* Actions row for Mobile */}
+                <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Role:</span>
+                    <select
+                      value={user.role}
+                      disabled={user._id === currentUser?._id}
+                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                      className="px-2 py-1 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 bg-white focus:outline-none transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="CUSTOMER">Customer</option>
+                      <option value="MERCHANT">Merchant</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteUser(user._id, user.name)}
+                    disabled={user._id === currentUser?._id}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Remove
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-2xl text-center">
+            <div className="text-4xl mb-3">⚠️</div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Remove User?</h3>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+              Are you sure you want to remove <strong className="text-gray-900">{confirmModal.userName}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal({ open: false, userId: null, userName: "" })}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+              >
+                Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

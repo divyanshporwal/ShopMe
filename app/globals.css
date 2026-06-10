@@ -68,7 +68,7 @@ img {
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
-}x
+}
 
 * {
   scrollbar-width: thin;
@@ -307,3 +307,30 @@ img {
   }
 }
 
+/* ── SEARCH ANIMATIONS ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CUSTOM QUANTITY INPUT ── */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.footer-link:hover {
+  color: #ffffff;
+}
+.footer-social:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}

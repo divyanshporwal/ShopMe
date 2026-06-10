@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, ShoppingBag, Heart, SlidersHorizontal, ChevronDown, X, Menu, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { mockProducts } from "@/lib/mockData";
 
 const CATEGORIES = ["All", "Sneakers", "Apparel", "Watches", "Accessories", "Perfumes"];
 
@@ -24,28 +23,22 @@ type Product = {
 
 export default function HomePage() {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>(mockProducts as Product[]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [focused, setFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch real products, fallback to mock
+  // Fetch products from MongoDB
   useEffect(() => {
     fetch("/api/products")
       .then((r) => r.json())
       .then((data) => {
-        const apiProducts = (data.products || []) as Product[];
-        const merged = [...apiProducts, ...mockProducts] as Product[];
-
-        const uniqueProducts = merged.filter(
-          (item, index, self) =>
-            index === self.findIndex((p) => p._id === item._id)
-        );
-
-        setProducts(uniqueProducts);
+        setProducts((data.products || []) as Product[]);
       })
-      .catch(() => setProducts(mockProducts));
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {

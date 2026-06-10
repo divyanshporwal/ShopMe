@@ -8,7 +8,6 @@ import {
   Star, Truck, Shield, RefreshCw, Package
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { mockProducts } from "@/lib/mockData";
 import { toast } from "react-hot-toast";
 import showToast from "@/lib/toast";
 
@@ -30,28 +29,13 @@ export default function ProductDetailPage() {
     .then((r) => r.json())
     .then((data) => {
         if (data.success && data.product) {
-          // Real DB product found
           setProduct(data.product);
-        } else {
-          // Only check mock data for short numeric IDs
-          const isMockId = ["1","2","3","4","5","6","7","8"].includes(id as string);
-          if (isMockId) {
-            const mock = mockProducts.find((p) => p._id === id);
-            setProduct(mock || null);
-          } else {
-            setProduct(null);
-          }
-        }
-      })
-      .catch(() => {
-        // Network error — try mock only for mock IDs
-        const isMockId = ["1","2","3","4","5","6","7","8"].includes(id as string);
-        if (isMockId) {
-          const mock = mockProducts.find((p) => p._id === id);
-          setProduct(mock || null);
         } else {
           setProduct(null);
         }
+      })
+      .catch(() => {
+        setProduct(null);
       })
       .finally(() => setLoading(false));
   }, [id]);

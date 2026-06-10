@@ -2,7 +2,7 @@
 
 import Sidebar from "@/components/layout/Sidebar";
 import useAuth from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 
@@ -17,19 +17,25 @@ export default function AdminLayout({
 }) {
   const { user, loading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    if (pathname === "/admin/login") return;
     if (!loading) {
       if (!user) {
-        router.push("/auth/login");
+        router.push("/admin/login");
       } else if (user.role !== "ADMIN") {
         router.push("/");
       }
     }
-  }, [user, loading]);
+  }, [user, loading, pathname]);
 
   if (loading) return <p className="p-6">Loading...</p>;
+
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -42,7 +48,7 @@ export default function AdminLayout({
       </button>
 
       {/* Sidebar Overlay */}
-      <div 
+      <div
         className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
         onClick={() => setSidebarOpen(false)}
       />

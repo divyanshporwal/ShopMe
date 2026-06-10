@@ -18,7 +18,7 @@ export default function CustomerLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "CUSTOMER")) {
+    if (!loading && (!user || (user.role !== "CUSTOMER" && user.role !== "MERCHANT"))) {
       router.push("/auth/login");
     }
   }, [user, loading]);

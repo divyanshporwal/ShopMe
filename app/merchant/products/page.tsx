@@ -20,6 +20,9 @@ export default function MerchantProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  
+  // Custom editable quantity state
+  const [editingQty, setEditingQty] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchProducts();
@@ -52,16 +55,15 @@ export default function MerchantProducts() {
   };
 
   const handleStockUpdate = async (product: Product, delta: number) => {
-    // Log to verify correct ID being sent
-    console.log('[STOCK BTN] product._id:', product._id)
-    console.log('[STOCK BTN] delta:', delta)
+    const currentStock = product.stock || 0;
+    const newQty = Math.max(0, currentStock + delta);
 
     // Optimistic UI update
     setProducts(prev => prev.map(p =>
       p._id === product._id
-        ? { ...p, stock: Math.max(0, (p.stock || 0) + delta) }
+        ? { ...p, stock: newQty }
         : p
-    ))
+    ));
 
     try {
       const res = await fetch(
@@ -71,10 +73,9 @@ export default function MerchantProducts() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ delta }),
         }
-      )
+      );
 
-      const data = await res.json()
-      console.log('[STOCK BTN] response:', data)
+      const data = await res.json();
 
       if (!res.ok) {
         // Revert optimistic update on error
@@ -82,14 +83,14 @@ export default function MerchantProducts() {
           p._id === product._id
             ? { ...p, stock: product.stock }
             : p
-        ))
-        showToast.error(data.error || 'Failed to update stock')
-        return
+        ));
+        showToast.error(data.error || 'Failed to update stock');
+        return;
       }
 
       showToast.success(
         `Stock updated: ${data.quantity} units remaining`
-      )
+      );
 
     } catch (err) {
       // Revert on network error
@@ -97,8 +98,108 @@ export default function MerchantProducts() {
         p._id === product._id
           ? { ...p, stock: product.stock }
           : p
-      ))
-      showToast.error('Network error. Please try again.')
+      ));
+      showToast.error('Network error. Please try again.');
+    }
+  };
+
+  const handleQtyInputChange = (productId: string, value: string) => {
+    setEditingQty(prev => ({ ...prev, [productId]: value }));
+  };
+
+  const handleQtyInputBlur = async (product: Product) => {
+    const rawValue = editingQty[product._id];
+
+    // If unchanged or empty, reset state
+    if (rawValue === undefined || rawValue === '') {
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
+      return;
+    }
+
+    const newQty = parseInt(rawValue);
+
+    // Validate
+    if (isNaN(newQty) || newQty < 0) {
+      showToast.error('Please enter a valid quantity (0 or more)');
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
+      return;
+    }
+
+    if (newQty === product.stock) {
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
+      return;
+    }
+
+    // Max limit check
+    if (newQty > 9999) {
+      showToast.error('Maximum quantity is 9,999');
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
+      return;
+    }
+
+    // Call API with absolute quantity
+    try {
+      const res = await fetch(
+        `/api/merchant/products/${product._id}/stock`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: newQty }),
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast.error(data.error || 'Failed to update');
+        return;
+      }
+
+      // Update product in list
+      setProducts(prev => prev.map(p =>
+        p._id === product._id
+          ? { ...p, stock: newQty }
+          : p
+      ));
+
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
+
+      showToast.success(`Stock set to ${newQty} units`);
+
+    } catch {
+      showToast.error('Network error');
+    }
+  };
+
+  const handleQtyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, product: Product) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+    if (e.key === 'Escape') {
+      setEditingQty(prev => {
+        const next = { ...prev };
+        delete next[product._id];
+        return next;
+      });
     }
   };
 
@@ -155,134 +256,167 @@ export default function MerchantProducts() {
         </div>
       ) : (
         <>
-          <div className="products-table bg-white border border-gray-200 rounded-2xl overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
-              <div className="col-span-5">Product</div>
-              <div className="col-span-2">Category</div>
-              <div className="col-span-2">Price</div>
-              <div className="col-span-1">Stock</div>
-              <div className="col-span-2 text-right">Actions</div>
-            </div>
+          {/* Scrollable Container Wrapper for tablet responsiveness */}
+          <div className="products-table bg-white border border-gray-200 rounded-2xl overflow-x-auto WebkitOverflowScrolling-touch">
+            <div className="min-w-[850px]">
+              {/* Table header */}
+              <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                <div className="col-span-4">Product</div>
+                <div className="col-span-2">Category</div>
+                <div className="col-span-2">Price</div>
+                <div className="col-span-2">Stock</div>
+                <div className="col-span-2 text-right">Actions</div>
+              </div>
 
-            {/* Rows */}
-            {products.map((product) => (
-              <div
-                key={product._id}
-                className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
-              >
-                {/* Product info */}
-                <div className="col-span-5 flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-100 shrink-0">
-                    {product.images?.[0] ? (
-                      <Image
-                        src={product.images[0]}
-                        alt={product.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-gray-400" />
-                      </div>
+              {/* Rows */}
+              {products.map((product) => (
+                <div
+                  key={product._id}
+                  className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
+                >
+                  {/* Product info */}
+                  <div className="col-span-4 flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                      {product.images?.[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <Package className="w-5 h-5 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {product.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{product.brand || "—"}</p>
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div className="col-span-2">
+                    <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                      {product.category || "—"}
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="col-span-2">
+                    <p className="text-sm font-bold text-gray-900">
+                        ₹{product.price?.toLocaleString("en-IN")}
+                    </p>
+                    {product.originalPrice && (
+                      <p className="text-xs text-gray-400 line-through">
+                        ₹{product.originalPrice?.toLocaleString("en-IN")}
+                      </p>
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {product.title}
-                    </p>
-                    <p className="text-xs text-gray-400">{product.brand || "—"}</p>
-                  </div>
-                </div>
 
-                {/* Category */}
-                <div className="col-span-2">
-                  <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                    {product.category || "—"}
-                  </span>
-                </div>
-
-                {/* Price */}
-                <div className="col-span-2">
-                  <p className="text-sm font-bold text-gray-900">
-                      ₹{product.price?.toLocaleString("en-IN")}
-                  </p>
-                  {product.originalPrice && (
-                    <p className="text-xs text-gray-400 line-through">
-                      ₹{product.originalPrice?.toLocaleString("en-IN")}
-                    </p>
-                  )}
-                </div>
-
-                {/* Stock */}
-                <div className="col-span-1">
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}>
-                    <button
-                      onClick={() => handleStockUpdate(product, -1)}
-                      disabled={(product.stock || 0) <= 0}
-                      style={{
-                        width: '28px', height: '28px',
-                        border: '1.5px solid #e5e7eb',
-                        borderRadius: '6px',
-                        background: (product.stock || 0) <= 0 ? '#f9fafb' : 'white',
-                        cursor: (product.stock || 0) <= 0 ? 'not-allowed' : 'pointer',
-                        fontSize: '18px', fontWeight: '300',
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'center',
-                        color: (product.stock || 0) <= 0 ? '#d1d5db' : '#111827',
-                      }}
-                    >−</button>
-
-                    <span style={{
-                      minWidth: '32px', textAlign: 'center',
-                      fontWeight: '600', fontSize: '14px',
-                      color: (product.stock || 0) <= 0 ? '#ef4444' :
-                             (product.stock || 0) <= 5 ? '#f97316' : '#111827',
+                  {/* Stock */}
+                  <div className="col-span-2">
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}>
-                      {product.stock || 0}
-                    </span>
+                      <button
+                        onClick={() => handleStockUpdate(product, -1)}
+                        disabled={(product.stock || 0) <= 0}
+                        style={{
+                          width: '28px', height: '32px',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '6px',
+                          background: (product.stock || 0) <= 0 ? '#f9fafb' : 'white',
+                          cursor: (product.stock || 0) <= 0 ? 'not-allowed' : 'pointer',
+                          fontSize: '16px',
+                          display: 'flex', alignItems: 'center',
+                          justifyContent: 'center',
+                          color: (product.stock || 0) <= 0 ? '#d1d5db' : '#111827',
+                          fontWeight: '400',
+                          flexShrink: 0,
+                        }}
+                      >−</button>
 
+                      <input
+                        type="number"
+                        min="0"
+                        max="9999"
+                        value={editingQty[product._id] !== undefined
+                          ? editingQty[product._id]
+                          : (product.stock || 0)
+                        }
+                        onChange={e => 
+                          handleQtyInputChange(product._id, e.target.value)
+                        }
+                        onBlur={() => handleQtyInputBlur(product)}
+                        onKeyDown={e => handleQtyKeyDown(e, product)}
+                        onFocus={e => {
+                          e.currentTarget.select();
+                          setEditingQty(prev => ({
+                            ...prev,
+                            [product._id]: String(product.stock || 0)
+                          }));
+                        }}
+                        style={{
+                          width: '56px',
+                          height: '32px',
+                          textAlign: 'center',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: (product.stock || 0) <= 0 ? '#ef4444' :
+                                 (product.stock || 0) <= 5 ? '#f97316' : '#111827',
+                          outline: 'none',
+                          MozAppearance: 'textfield',
+                        }}
+                      />
+
+                      <button
+                        onClick={() => handleStockUpdate(product, +1)}
+                        style={{
+                          width: '28px', height: '32px',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '6px',
+                          background: 'white',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          display: 'flex', alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#111827',
+                          fontWeight: '400',
+                          flexShrink: 0,
+                        }}
+                      >+</button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-2 flex items-center justify-end gap-2">
+                    <Link
+                      href={`/customer/products/${product._id}`}
+                      className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500 hover:text-black"
+                      title="View"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Link>
                     <button
-                      onClick={() => handleStockUpdate(product, +1)}
-                      style={{
-                        width: '28px', height: '28px',
-                        border: '1.5px solid #e5e7eb',
-                        borderRadius: '6px',
-                        background: 'white',
-                        cursor: 'pointer',
-                        fontSize: '18px', fontWeight: '300',
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#111827',
-                      }}
-                    >+</button>
+                      onClick={() => handleDelete(product._id)}
+                      disabled={deleting === product._id}
+                      className="p-2 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500 disabled:opacity-50"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="col-span-2 flex items-center justify-end gap-2">
-                  <Link
-                    href={`/customer/products/${product._id}`}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500 hover:text-black"
-                    title="View"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    disabled={deleting === product._id}
-                    className="p-2 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500 disabled:opacity-50"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Mobile Card View */}
@@ -325,39 +459,69 @@ export default function MerchantProducts() {
                       onClick={() => handleStockUpdate(product, -1)}
                       disabled={(product.stock || 0) <= 0}
                       style={{
-                        width: '28px', height: '28px',
+                        width: '28px', height: '32px',
                         border: '1.5px solid #e5e7eb',
                         borderRadius: '6px',
                         background: (product.stock || 0) <= 0 ? '#f9fafb' : 'white',
                         cursor: (product.stock || 0) <= 0 ? 'not-allowed' : 'pointer',
-                        fontSize: '18px', fontWeight: '300',
+                        fontSize: '16px',
                         display: 'flex', alignItems: 'center',
                         justifyContent: 'center',
                         color: (product.stock || 0) <= 0 ? '#d1d5db' : '#111827',
+                        fontWeight: '400',
+                        flexShrink: 0,
                       }}
                     >−</button>
 
-                    <span style={{
-                      minWidth: '32px', textAlign: 'center',
-                      fontWeight: '600', fontSize: '14px',
-                      color: (product.stock || 0) <= 0 ? '#ef4444' :
-                             (product.stock || 0) <= 5 ? '#f97316' : '#111827',
-                    }}>
-                      {product.stock || 0}
-                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="9999"
+                      value={editingQty[product._id] !== undefined
+                        ? editingQty[product._id]
+                        : (product.stock || 0)
+                      }
+                      onChange={e => 
+                        handleQtyInputChange(product._id, e.target.value)
+                      }
+                      onBlur={() => handleQtyInputBlur(product)}
+                      onKeyDown={e => handleQtyKeyDown(e, product)}
+                      onFocus={e => {
+                        e.currentTarget.select();
+                        setEditingQty(prev => ({
+                          ...prev,
+                          [product._id]: String(product.stock || 0)
+                        }));
+                      }}
+                      style={{
+                        width: '56px',
+                        height: '32px',
+                        textAlign: 'center',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: (product.stock || 0) <= 0 ? '#ef4444' :
+                               (product.stock || 0) <= 5 ? '#f97316' : '#111827',
+                        outline: 'none',
+                        MozAppearance: 'textfield',
+                      }}
+                    />
 
                     <button
                       onClick={() => handleStockUpdate(product, +1)}
                       style={{
-                        width: '28px', height: '28px',
+                        width: '28px', height: '32px',
                         border: '1.5px solid #e5e7eb',
                         borderRadius: '6px',
                         background: 'white',
                         cursor: 'pointer',
-                        fontSize: '18px', fontWeight: '300',
+                        fontSize: '16px',
                         display: 'flex', alignItems: 'center',
                         justifyContent: 'center',
                         color: '#111827',
+                        fontWeight: '400',
+                        flexShrink: 0,
                       }}
                     >+</button>
                   </div>

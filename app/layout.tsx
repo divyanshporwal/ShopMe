@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 
+import Footer from '@/components/Footer';
+
 export const metadata: Metadata = {
   title: "ShopMe",
   description: "ShopMe ecommerce store",
@@ -16,6 +18,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
+        <Footer />
 
         {/* Toast notifications */}
         <Toaster

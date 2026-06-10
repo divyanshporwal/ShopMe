@@ -10,6 +10,7 @@ import { useCartStore } from "@/store/cartStore";
 import toast from "react-hot-toast";
 import showToast from "@/lib/toast";
 import LocationModal from "@/components/LocationModal";
+import SearchBar from "@/components/SearchBar";
 
 const NAV_LINKS = [
   { label: "ALL", href: "/customer/products", category: "" },
@@ -30,8 +31,6 @@ interface UserType {
 }
 
 export default function Navbar() {
-  const [search, setSearch] = useState("");
-  const [focused, setFocused] = useState(false);
   const [user, setUser] = useState<UserType | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -91,7 +90,7 @@ export default function Navbar() {
   const getDashboardLink = () => {
     if (user?.role === "ADMIN") return "/admin/dashboard";
     if (user?.role === "MERCHANT") return "/merchant/dashboard";
-    return "/customer/orders";
+    return "/customer/dashboard";
   };
 
   const isActive = (link: typeof NAV_LINKS[0]) => {
@@ -101,11 +100,7 @@ export default function Navbar() {
     return currentCategory === link.category;
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-    router.push(`/customer/products?search=${encodeURIComponent(search.trim())}`);
-  };
+
 
   return (
     <header className="sticky top-0 z-50 bg-white">
@@ -131,36 +126,14 @@ export default function Navbar() {
         </Link>
 
         {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 min-w-0 max-w-[calc(100%-100px)] md:max-w-2xl relative">
-          <div className={`flex items-center border border-gray-200 md:border-2 rounded-[20px] md:rounded-full px-3 md:px-4 py-0 h-[36px] md:h-auto md:py-2.5 gap-2 md:gap-3 bg-gray-50 transition-all duration-200 ${
-            focused ? "border-black bg-white shadow-md" : ""
-          }`}>
-            <button type="submit">
-              <Search className="w-4 h-4 text-gray-400 hover:text-black shrink-0 transition" />
-            </button>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              className="flex-1 bg-transparent text-[13px] md:text-sm outline-none text-gray-800 placeholder-gray-400 min-w-0"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => { setSearch(""); router.push("/customer/products"); }}
-                className="text-gray-400 hover:text-gray-600 text-xs"
-              >✕</button>
-            )}
-          </div>
-        </form>
+        <div className="flex-1 min-w-0 max-w-[calc(100%-100px)] md:max-w-2xl relative">
+          <SearchBar />
+        </div>
 
         {/* Right section - Hidden on mobile */}
         <div className="hidden md:flex items-center ml-auto shrink-0 divide-x divide-gray-200 border-l border-gray-200">
 
-          {(!user || user.role === "CUSTOMER") && (
+          {(!user || user.role === "CUSTOMER" || user.role === "MERCHANT") && (
             <button
               onClick={() => setLocationModalOpen(true)}
               className="hidden lg:flex items-center gap-2 px-5 h-16 hover:bg-gray-50 transition group"
@@ -211,28 +184,48 @@ export default function Navbar() {
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
                       <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                      <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        user.role === "ADMIN"
+                      <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${user.role === "ADMIN"
                           ? "bg-purple-100 text-purple-700"
                           : user.role === "MERCHANT"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}>
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}>
                         {user.role}
                       </span>
                     </div>
 
                     <div className="py-1.5">
-                      <Link
-                        href={getDashboardLink()}
-                        onClick={() => setShowDropdown(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                        My Dashboard
-                      </Link>
+                      {user.role === "MERCHANT" ? (
+                        <>
+                          <Link
+                            href="/customer/dashboard"
+                            onClick={() => setShowDropdown(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
+                          >
+                            <User className="w-4 h-4 text-gray-400" />
+                            Customer Dashboard
+                          </Link>
+                          <Link
+                            href="/merchant/dashboard"
+                            onClick={() => setShowDropdown(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
+                          >
+                            <Store className="w-4 h-4 text-gray-400" />
+                            Merchant Dashboard
+                          </Link>
+                        </>
+                      ) : (
+                        <Link
+                          href={getDashboardLink()}
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                          My Dashboard
+                        </Link>
+                      )}
 
-                      {user.role === "CUSTOMER" && (
+                      {(user.role === "CUSTOMER" || user.role === "MERCHANT") && (
                         <Link
                           href="/customer/orders"
                           onClick={() => setShowDropdown(false)}
@@ -243,7 +236,7 @@ export default function Navbar() {
                         </Link>
                       )}
 
-                      {user.role === "CUSTOMER" && (
+                      {(user.role === "CUSTOMER" || user.role === "MERCHANT") && (
                         <Link
                           href="/customer/wishlist"
                           onClick={() => setShowDropdown(false)}
@@ -254,18 +247,7 @@ export default function Navbar() {
                         </Link>
                       )}
 
-                      {user.role === "MERCHANT" && (
-                        <Link
-                          href="/merchant/add-product"
-                          onClick={() => setShowDropdown(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
-                        >
-                          <Store className="w-4 h-4 text-gray-400" />
-                          Add Product
-                        </Link>
-                      )}
-
-                      {user.role === "CUSTOMER" && (
+                      {(user.role === "CUSTOMER" || user.role === "MERCHANT") && (
                         <Link
                           href="/customer/cart"
                           onClick={() => setShowDropdown(false)}
@@ -295,8 +277,8 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Cart — only for customers */}
-              {user.role === "CUSTOMER" && (
+              {/* Cart — for customers and merchants browsing the store */}
+              {(user.role === "CUSTOMER" || user.role === "MERCHANT") && (
                 <Link
                   href="/customer/cart"
                   className="flex items-center gap-2.5 px-5 h-16 hover:bg-gray-50 transition group"
@@ -372,15 +354,36 @@ export default function Navbar() {
                     <p className="text-[17px] text-gray-900 font-bold capitalize">{user.name}</p>
                   </div>
                 )}
-                <Link
-                  href={getDashboardLink()}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
-                >
-                  My Dashboard
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </Link>
-                {user.role === "CUSTOMER" && (
+                {user.role === "MERCHANT" ? (
+                  <>
+                    <Link
+                      href="/customer/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                    >
+                      Customer Dashboard
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                    <Link
+                      href="/merchant/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                    >
+                      Merchant Dashboard
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    href={getDashboardLink()}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                  >
+                    My Dashboard
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                  </Link>
+                )}
+                {(user.role === "CUSTOMER" || user.role === "MERCHANT") && (
                   <>
                     <Link
                       href="/customer/orders"
@@ -461,8 +464,8 @@ export default function Navbar() {
                       ${active
                         ? "text-black border-black"
                         : link.sale
-                        ? "text-blue-600 border-transparent hover:border-blue-400 hover:text-blue-700"
-                        : "text-gray-500 border-transparent hover:text-black hover:border-gray-400"
+                          ? "text-blue-600 border-transparent hover:border-blue-400 hover:text-blue-700"
+                          : "text-gray-500 border-transparent hover:text-black hover:border-gray-400"
                       }`}
                   >
                     {link.label}
@@ -480,5 +483,5 @@ export default function Navbar() {
         currentLocation={selectedLocation}
       />
     </header>
-  );  
+  );
 }
