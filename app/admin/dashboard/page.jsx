@@ -63,22 +63,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-8">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link
               key={stat.label}
               href={stat.href}
-              className="bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md transition group"
+              className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 hover:shadow-md transition group"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <p className="text-2xl font-black text-gray-900">
+              <p className="text-xl md:text-2xl font-black text-gray-900">
                 {loading ? "—" : stat.value}
               </p>
-              <p className="text-sm text-gray-500 mt-1 group-hover:text-black transition">
+              <p className="text-xs md:text-sm text-gray-500 mt-1 group-hover:text-black transition">
                 {stat.label}
               </p>
             </Link>
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending requests */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">

@@ -11,6 +11,7 @@ import {
   ClipboardList,
   PlusCircle,
   LogOut,
+  X,
 } from "lucide-react";
 
 const MERCHANT_LINKS = [
@@ -28,7 +29,7 @@ const ADMIN_LINKS = [
   { label: "Requests", href: "/admin/requests", icon: ClipboardList },
 ];
 
-export default function Sidebar({ role = "merchant" }) {
+export default function Sidebar({ role = "merchant", onClose }: { role?: string; onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const links = role === "admin" ? ADMIN_LINKS : MERCHANT_LINKS;
@@ -37,8 +38,8 @@ export default function Sidebar({ role = "merchant" }) {
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col sticky top-0">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-100">
-        <Link href={`${base}/dashboard`}>
+      <div className="px-6 py-5 border-b border-gray-100 relative">
+        <Link href={`${base}/dashboard`} onClick={onClose}>
           <div className="flex flex-col leading-none">
             <span className="text-[10px] font-semibold tracking-[0.3em] text-gray-400 uppercase">
               Shop
@@ -46,6 +47,14 @@ export default function Sidebar({ role = "merchant" }) {
             <span className="text-xl font-black text-black">ME</span>
           </div>
         </Link>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 md:hidden text-gray-400 hover:text-black p-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
         <div className="mt-3 flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center">
             <span className="text-white text-[10px] font-bold">
@@ -68,6 +77,7 @@ export default function Sidebar({ role = "merchant" }) {
             <Link
               key={link.href}
               href={link.href}
+              onClick={onClose}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 active
                   ? "bg-black text-white"
@@ -85,6 +95,7 @@ export default function Sidebar({ role = "merchant" }) {
       <div className="px-3 py-4 border-t border-gray-100">
         <button
           onClick={async () => {
+            onClose?.();
             await fetch("/api/auth/logout", { method: "POST" });
             showToast.success('You have been signed out. See you soon!', { duration: 3000 });
             router.push("/auth/login");

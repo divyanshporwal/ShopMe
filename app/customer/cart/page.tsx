@@ -94,10 +94,10 @@ export default function CartPage() {
           {cart.map((item: any) => (
             <div
               key={item._id}
-              className="bg-white border border-gray-200 rounded-2xl p-5 flex gap-5 hover:border-gray-300 transition"
+              className="bg-white border border-gray-200 rounded-2xl p-3 md:p-5 flex gap-3 md:gap-5 hover:border-gray-300 transition"
             >
               {/* Product image */}
-              <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
+              <div className="relative w-16 h-16 md:w-28 md:h-28 rounded-xl overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
                 {item.image ? (
                   <Image
                     src={item.image}
@@ -107,7 +107,7 @@ export default function CartPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <ShoppingBag className="w-8 h-8 text-gray-300" />
+                    <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-gray-300" />
                   </div>
                 )}
               </div>
@@ -121,12 +121,12 @@ export default function CartPage() {
                         {item.category}
                       </p>
                     )}
-                    <p className="text-sm font-bold text-gray-900 truncate">
+                    <p className="text-xs md:text-sm font-bold text-gray-900 truncate">
                       {item.title}
                     </p>
                     {item.stock && item.stock <= 5 && (
-                      <p className="text-xs text-orange-500 font-semibold mt-1">
-                        ⚠️ Only {item.stock} left in stock
+                      <p className="text-[11px] text-orange-500 font-semibold mt-1">
+                        ⚠️ Only {item.stock} left
                       </p>
                     )}
                   </div>
@@ -134,49 +134,49 @@ export default function CartPage() {
                   {/* Remove button */}
                   <button
                     onClick={() => removeFromCart(item._id)}
-                    className="p-2 rounded-xl hover:bg-red-50 transition text-gray-400 hover:text-red-500 shrink-0"
+                    className="p-1.5 md:p-2 rounded-xl hover:bg-red-50 transition text-gray-400 hover:text-red-500 shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Price + quantity row */}
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 md:mt-4">
                   {/* Price */}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-gray-900">
+                      <span className="text-base md:text-lg font-black text-gray-900">
                         ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                       </span>
                       {item.originalPrice && item.originalPrice > item.price && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-xs md:text-sm text-gray-400 line-through">
                           ₹{(item.originalPrice * item.quantity).toLocaleString("en-IN")}
                         </span>
                       )}
                     </div>
                     {item.quantity > 1 && (
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-[11px] text-gray-400 mt-0.5">
                         ₹{item.price.toLocaleString("en-IN")} each
                       </p>
                     )}
                   </div>
 
                   {/* Quantity controls */}
-                  <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
                     <button
                       onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold"
+                      className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold"
                     >
-                      <Minus className="w-3.5 h-3.5" />
+                      <Minus className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     </button>
-                    <span className="w-8 text-center text-sm font-black text-gray-900">
+                    <span className="w-7 md:w-8 text-center text-xs md:text-sm font-black text-gray-900">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => handleIncreaseQty(item)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold"
+                      className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     </button>
                   </div>
                 </div>

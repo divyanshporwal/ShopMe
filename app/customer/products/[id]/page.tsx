@@ -137,7 +137,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 gap-12 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 animate-pulse">
           <div className="space-y-3">
             <div className="aspect-square bg-gray-200 rounded-3xl" />
             <div className="grid grid-cols-4 gap-2">
@@ -181,34 +181,34 @@ export default function ProductDetailPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400 mb-8">
+      <div className="flex items-center gap-2 text-sm text-gray-400 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 hover:text-black transition font-medium"
+          className="flex items-center gap-1.5 hover:text-black transition font-medium shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        <span>/</span>
-        <Link href="/customer/products" className="hover:text-black transition">
+        <span className="shrink-0">/</span>
+        <Link href="/customer/products" className="hover:text-black transition shrink-0">
           Products
         </Link>
         {product.category && (
           <>
-            <span>/</span>
+            <span className="shrink-0">/</span>
             <Link
               href={`/customer/products?category=${product.category}`}
-              className="hover:text-black transition"
+              className="hover:text-black transition shrink-0"
             >
               {product.category}
             </Link>
           </>
         )}
-        <span>/</span>
-        <span className="text-gray-600 truncate max-w-[200px]">{product.title}</span>
+        <span className="shrink-0">/</span>
+        <span className="text-gray-600 truncate max-w-[200px] shrink-0">{product.title}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
         {/* Left — Images */}
         <div className="space-y-4">
           {/* Main image */}

@@ -72,12 +72,12 @@ export default function AdminRequests() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
         {["ALL", "PENDING", "APPROVED", "REJECTED"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0 ${
               filter === tab
                 ? "bg-black text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:border-gray-400"
@@ -124,64 +124,69 @@ export default function AdminRequests() {
           {filtered.map((req) => (
             <div
               key={req._id}
-              className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 hover:shadow-sm transition"
+              className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-sm transition"
             >
-              {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-base">
-                  {req.userId?.name?.[0]?.toUpperCase() || "?"}
-                </span>
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-base font-bold text-gray-900">
-                  {req.userId?.name || "Unknown User"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {req.userId?.email}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Applied{" "}
-                  {new Date(req.createdAt).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-
-              {/* Status */}
-              <span
-                className={`text-xs font-bold px-3 py-1.5 rounded-full border ${
-                  STATUS_STYLES[req.status]
-                }`}
-              >
-                {req.status}
-              </span>
-
-              {/* Actions */}
-              {req.status === "PENDING" && (
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => handleAction(req._id, "approve")}
-                    disabled={processing === req._id}
-                    className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-700 transition disabled:opacity-50"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() => handleAction(req._id, "reject")}
-                    disabled={processing === req._id}
-                    className="flex items-center gap-1.5 bg-white border-2 border-red-200 text-red-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-50 transition disabled:opacity-50"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Reject
-                  </button>
+              <div className="flex items-center gap-3 w-full md:w-auto flex-1 min-w-0">
+                {/* Avatar */}
+                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center shrink-0">
+                  <span className="text-white font-bold text-base">
+                    {req.userId?.name?.[0]?.toUpperCase() || "?"}
+                  </span>
                 </div>
-              )}
+
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-bold text-gray-900 truncate">
+                    {req.userId?.name || "Unknown User"}
+                  </p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {req.userId?.email}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Applied{" "}
+                    {new Date(req.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions & Status block */}
+              <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-gray-100 md:border-t-0 pt-3 md:pt-0 shrink-0">
+                {/* Status */}
+                <span
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full border ${
+                    STATUS_STYLES[req.status]
+                  }`}
+                >
+                  {req.status}
+                </span>
+
+                {/* Actions */}
+                {req.status === "PENDING" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAction(req._id, "approve")}
+                      disabled={processing === req._id}
+                      className="flex items-center justify-center gap-1.5 bg-green-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                      Approve
+                    </button>
+
+                    <button
+                      onClick={() => handleAction(req._id, "reject")}
+                      disabled={processing === req._id}
+                      className="flex items-center justify-center gap-1.5 bg-white border-2 border-red-200 text-red-500 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-red-50 transition disabled:opacity-50"
+                    >
+                      <XCircle className="w-4 h-4 shrink-0" />
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

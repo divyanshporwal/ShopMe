@@ -31,7 +31,7 @@ export default function CustomerLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="max-w-[1400px] mx-auto px-6 py-8">
+      <main className="max-w-[1400px] mx-auto px-3 md:px-6 py-6 md:py-8">
         {children}
       </main>
     </div>

@@ -82,74 +82,127 @@ export default function AdminProducts() {
           <p className="text-gray-500 text-sm">No products found</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
-            <div className="col-span-5">Product</div>
-            <div className="col-span-2">Category</div>
-            <div className="col-span-2">Price</div>
-            <div className="col-span-2">Stock</div>
-            <div className="col-span-1 text-right">Action</div>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
+              <div className="col-span-5">Product</div>
+              <div className="col-span-2">Category</div>
+              <div className="col-span-2">Price</div>
+              <div className="col-span-2">Stock</div>
+              <div className="col-span-1 text-right">Action</div>
+            </div>
+
+            {filtered.map((product) => (
+              <div
+                key={product._id}
+                className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
+              >
+                <div className="col-span-5 flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                    {product.images?.[0] ? (
+                      <Image src={product.images[0]} alt={product.title} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <Package className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{product.title}</p>
+                    <p className="text-xs text-gray-400">{product.brand || "—"}</p>
+                  </div>
+                </div>
+
+                <div className="col-span-2">
+                  <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                    {product.category || "—"}
+                  </span>
+                </div>
+
+                <div className="col-span-2">
+                  <p className="text-sm font-bold text-gray-900">
+                    ₹{product.price?.toLocaleString("en-IN")}
+                  </p>
+                  {product.originalPrice && (
+                    <p className="text-xs text-gray-400 line-through">
+                      ₹{product.originalPrice?.toLocaleString("en-IN")}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2">
+                  <span className={`text-xs font-bold ${
+                    product.stock === 0 ? "text-red-500" :
+                    product.stock <= 3 ? "text-orange-500" : "text-green-600"
+                  }`}>
+                    {product.stock} in stock
+                  </span>
+                </div>
+
+                <div className="col-span-1 flex justify-end">
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    disabled={deleting === product._id}
+                    className="p-2 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {filtered.map((product) => (
-            <div
-              key={product._id}
-              className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
-            >
-              <div className="col-span-5 flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filtered.map((product) => (
+              <div
+                key={product._id}
+                className="bg-white border border-gray-200 rounded-2xl p-4 flex gap-4 items-center shadow-sm relative"
+              >
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shrink-0">
                   {product.images?.[0] ? (
                     <Image src={product.images[0]} alt={product.title} fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Package className="w-5 h-5 text-gray-400" />
+                      <Package className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{product.title}</p>
-                  <p className="text-xs text-gray-400">{product.brand || "—"}</p>
+
+                <div className="flex-1 min-w-0 pr-8">
+                  <p className="text-sm font-bold text-gray-900 truncate">{product.title}</p>
+                  <p className="text-xs text-gray-400 mb-2">{product.brand || "—"}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full">
+                      {product.category || "—"}
+                    </span>
+                    <span className="text-sm font-black text-gray-900">
+                      ₹{product.price?.toLocaleString("en-IN")}
+                    </span>
+                    <span className={`text-xs font-bold ${
+                      product.stock === 0 ? "text-red-500" :
+                      product.stock <= 3 ? "text-orange-500" : "text-green-600"
+                    }`}>
+                      ({product.stock} left)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="absolute top-3 right-3">
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    disabled={deleting === product._id}
+                    className="p-2 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-
-              <div className="col-span-2">
-                <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                  {product.category || "—"}
-                </span>
-              </div>
-
-              <div className="col-span-2">
-                <p className="text-sm font-bold text-gray-900">
-                  ₹{product.price?.toLocaleString("en-IN")}
-                </p>
-                {product.originalPrice && (
-                  <p className="text-xs text-gray-400 line-through">
-                    ₹{product.originalPrice?.toLocaleString("en-IN")}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                <span className={`text-xs font-bold ${
-                  product.stock === 0 ? "text-red-500" :
-                  product.stock <= 3 ? "text-orange-500" : "text-green-600"
-                }`}>
-                  {product.stock} in stock
-                </span>
-              </div>
-
-              <div className="col-span-1 flex justify-end">
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  disabled={deleting === product._id}
-                  className="p-2 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500 disabled:opacity-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

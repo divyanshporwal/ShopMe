@@ -174,7 +174,7 @@ export default function AddProductPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 Brand
@@ -212,7 +212,7 @@ export default function AddProductPage() {
         <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
           <h2 className="text-sm font-bold text-gray-900">Pricing & Stock</h2>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 Selling Price (₹) *
@@ -272,9 +272,9 @@ export default function AddProductPage() {
         {/* Flags */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6">
           <h2 className="text-sm font-bold text-gray-900 mb-4">Product Flags</h2>
-          <div className="flex gap-6">
+          <div className="flex flex-col sm:flex-row gap-6">
             <label className="flex items-center gap-3 cursor-pointer group">
-              <div className={`w-10 h-6 rounded-full transition-all ${form.isSale ? "bg-black" : "bg-gray-200"} relative`}>
+              <div className={`w-10 h-6 rounded-full transition-all ${form.isSale ? "bg-black" : "bg-gray-200"} relative shrink-0`}>
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${form.isSale ? "left-5" : "left-1"}`} />
               </div>
               <input
@@ -291,7 +291,7 @@ export default function AddProductPage() {
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer group">
-              <div className={`w-10 h-6 rounded-full transition-all ${form.isInstant ? "bg-black" : "bg-gray-200"} relative`}>
+              <div className={`w-10 h-6 rounded-full transition-all ${form.isInstant ? "bg-black" : "bg-gray-200"} relative shrink-0`}>
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${form.isInstant ? "left-5" : "left-1"}`} />
               </div>
               <input

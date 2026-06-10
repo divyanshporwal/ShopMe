@@ -113,18 +113,18 @@ export default function MerchantOrders() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
           { label: "Total Orders", value: orders.length, color: "text-gray-900" },
           { label: "Pending", value: orders.filter(o => o.status === "PENDING").length, color: "text-yellow-600" },
           { label: "Shipped", value: orders.filter(o => o.status === "SHIPPED").length, color: "text-blue-600" },
           { label: "Delivered", value: orders.filter(o => o.status === "DELIVERED").length, color: "text-green-600" },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-5">
-            <p className={`text-2xl font-black ${stat.color}`}>
+          <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5">
+            <p className={`text-xl md:text-2xl font-black ${stat.color}`}>
               {loading ? "—" : stat.value}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+            <p className="text-xs md:text-sm text-gray-500 mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -157,51 +157,136 @@ export default function MerchantOrders() {
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
-            <div className="col-span-4">Products</div>
-            <div className="col-span-3">Customer</div>
-            <div className="col-span-2">Amount</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-1">Action</div>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
+              <div className="col-span-4">Products</div>
+              <div className="col-span-3">Customer</div>
+              <div className="col-span-2">Amount</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-1">Action</div>
+            </div>
+
+            {orders.map((order) => {
+              const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.PENDING;
+              const StatusIcon = statusStyle.icon;
+              return (
+                <div
+                  key={order._id}
+                  className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
+                >
+                  <div className="col-span-4">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {order.items.map((item) => item.title).join(", ")}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {order.items.length} item{order.items.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-sm text-gray-700">{order.customerName}</p>
+                    {order.customerEmail && (
+                      <p className="text-xs text-gray-400 truncate">{order.customerEmail}</p>
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm font-bold text-gray-900">
+                      ₹{order.amount?.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusStyle.color}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {order.status}
+                    </span>
+                  </div>
+                  <div className="col-span-1">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={statusDrafts[order._id] || order.status}
+                        onChange={(e) =>
+                          setStatusDrafts((prev) => ({
+                            ...prev,
+                            [order._id]: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-gray-700"
+                      >
+                        {ORDER_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => updateStatus(order._id)}
+                        disabled={updatingId === order._id}
+                        className="inline-flex items-center justify-center rounded-lg bg-black px-3 py-1 text-xs font-bold text-white disabled:opacity-50"
+                        title="Update order status"
+                      >
+                        {updatingId === order._id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          "Save"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {orders.map((order) => {
-            const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.PENDING;
-            const StatusIcon = statusStyle.icon;
-            return (
-              <div
-                key={order._id}
-                className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
-              >
-                <div className="col-span-4">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {order.items.map((item) => item.title).join(", ")}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {order.items.length} item{order.items.length > 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm text-gray-700">{order.customerName}</p>
-                  {order.customerEmail && (
-                    <p className="text-xs text-gray-400 truncate">{order.customerEmail}</p>
-                  )}
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm font-bold text-gray-900">
-                    ₹{order.amount?.toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusStyle.color}`}>
-                    <StatusIcon className="w-3 h-3" />
-                    {order.status}
-                  </span>
-                </div>
-                <div className="col-span-1">
-                  <div className="flex items-center gap-2">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {orders.map((order) => {
+              const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.PENDING;
+              const StatusIcon = statusStyle.icon;
+              return (
+                <div
+                  key={order._id}
+                  className="bg-white border border-gray-200 rounded-2xl p-4 space-y-4 shadow-sm"
+                >
+                  <div>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Order ID: {order._id}
+                    </span>
+                    <h4 className="text-sm font-bold text-gray-900 mt-1 leading-snug">
+                      {order.items.map((item) => item.title).join(", ")}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {order.items.length} item{order.items.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                      Customer
+                    </span>
+                    <p className="text-sm font-semibold text-gray-800">{order.customerName}</p>
+                    {order.customerEmail && (
+                      <p className="text-xs text-gray-500 truncate">{order.customerEmail}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">
+                        Amount
+                      </span>
+                      <span className="text-sm font-bold text-gray-900">
+                        ₹{order.amount?.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusStyle.color}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {order.status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
                     <select
                       value={statusDrafts[order._id] || order.status}
                       onChange={(e) =>
@@ -210,7 +295,7 @@ export default function MerchantOrders() {
                           [order._id]: e.target.value,
                         }))
                       }
-                      className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-gray-700"
+                      className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700"
                     >
                       {ORDER_STATUSES.map((status) => (
                         <option key={status} value={status}>
@@ -221,8 +306,7 @@ export default function MerchantOrders() {
                     <button
                       onClick={() => updateStatus(order._id)}
                       disabled={updatingId === order._id}
-                      className="inline-flex items-center justify-center rounded-lg bg-black px-3 py-1 text-xs font-bold text-white disabled:opacity-50"
-                      title="Update order status"
+                      className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50 min-w-[60px]"
                     >
                       {updatingId === order._id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -232,10 +316,10 @@ export default function MerchantOrders() {
                     </button>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

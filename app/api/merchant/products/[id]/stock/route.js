@@ -1,44 +1,104 @@
-import { NextResponse } from "next/server";
-import { getAuthUser } from "@/middleware/auth";
-import { connectDB } from "@/lib/db";
-import Product from "@/models/product.model";
+import { NextResponse } from 'next/server'
+import { connectDB } from '@/lib/db'
+import Product from '@/models/product.model'
+import { getAuthUser } from '@/middleware/auth'
 
-export async function PATCH(req, { params }) {
+export async function PATCH(request, { params }) {
   try {
-    await connectDB();
-    const user = await getAuthUser();
-    
-    const { id } = params;
-    const body = await req.json();
-    
-    const product = await Product.findById(id);
-    
+    await connectDB()
+
+    let user;
+    try {
+      user = await getAuthUser()
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    if (!user?._id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get product ID from URL params (unwrap/await params)
+    const { id: productId } = await params
+    console.log('[STOCK UPDATE] productId:', productId)
+    console.log('[STOCK UPDATE] userId:', user._id)
+
+    // Parse request body
+    const body = await request.json()
+    const { delta, quantity } = body
+    console.log('[STOCK UPDATE] body:', body)
+
+    // Find product — no merchant check yet
+    const product = await Product.findById(productId)
+    console.log('[STOCK UPDATE] product found:', !!product)
+
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Product not found', productId },
+        { status: 404 }
+      )
     }
 
-    if (product.merchantId.toString() !== user._id.toString()) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    // Verify merchant owns this product
+    const merchantField = product.merchantId
+                       || product.merchant
+                       || product.sellerId
+                       || product.userId
+                       || product.owner
+
+    if (merchantField?.toString() !== user._id?.toString()) {
+      return NextResponse.json(
+        { error: 'Forbidden — not your product' },
+        { status: 403 }
+      )
     }
 
-    let newQty = product.stock;
-    if (body.delta !== undefined) {
-      newQty = Math.max(0, product.stock + body.delta);
-    } else if (body.quantity !== undefined) {
-      newQty = Math.max(0, Number(body.quantity));
+    // Calculate new quantity
+    let newQty
+
+    // Check both product.stock and product.quantity just in case
+    const currentQty = product.stock !== undefined ? product.stock : 0
+
+    if (typeof delta === 'number') {
+      // Increment/decrement mode
+      newQty = Math.max(0, currentQty + delta)
+    } else if (typeof quantity === 'number') {
+      // Set absolute value mode
+      newQty = Math.max(0, quantity)
     } else {
-      return NextResponse.json({ error: "No update values provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Provide delta or quantity in request body' },
+        { status: 400 }
+      )
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { stock: newQty },
+    // Update product quantity / stock
+    const updated = await Product.findByIdAndUpdate(
+      productId,
+      { $set: { stock: newQty } },
       { new: true }
-    );
+    )
 
-    return NextResponse.json({ quantity: newQty, message: "Stock updated" });
+    console.log('[STOCK UPDATE] new quantity:', newQty)
+
+    return NextResponse.json({
+      success: true,
+      quantity: newQty,
+      productId,
+      message: `Stock updated to ${newQty}`,
+    })
+
   } catch (error) {
-    console.error("STOCK UPDATE ERROR:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[STOCK UPDATE] error:', error.message)
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
   }
 }

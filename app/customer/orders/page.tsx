@@ -78,16 +78,16 @@ export default function OrdersPage() {
             className="bg-white rounded-2xl shadow-md p-6 border border-gray-100"
           >
             {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+              <p className="text-xs md:text-sm text-gray-500 truncate">
                 Order ID:
-                <span className="ml-2 font-medium text-gray-700">
+                <span className="ml-1 md:ml-2 font-medium text-gray-700 select-all">
                   {order._id}
                 </span>
               </p>
 
               <span
-                className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                className={`px-3 py-1 text-xs font-semibold rounded-full w-fit ${
                   order.status === "DELIVERED"
                     ? "bg-green-100 text-green-700"
                     : order.status === "SHIPPED" || order.status === "PAID"

@@ -42,8 +42,8 @@ export default function AdminUsers() {
       </div>
 
       {/* Search + filter */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -54,12 +54,12 @@ export default function AdminUsers() {
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide shrink-0">
           {["ALL", "CUSTOMER", "MERCHANT", "ADMIN"].map((role) => (
             <button
               key={role}
               onClick={() => setFilter(role)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0 ${
                 filter === role
                   ? "bg-black text-white"
                   : "bg-white border border-gray-200 text-gray-600 hover:border-gray-400"
@@ -90,64 +90,117 @@ export default function AdminUsers() {
           <p className="text-gray-500 text-sm">No users found</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
-            <div className="col-span-4">User</div>
-            <div className="col-span-4">Email</div>
-            <div className="col-span-2">Role</div>
-            <div className="col-span-2">Joined</div>
-          </div>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
+              <div className="col-span-4">User</div>
+              <div className="col-span-4">Email</div>
+              <div className="col-span-2">Role</div>
+              <div className="col-span-2">Joined</div>
+            </div>
 
-          {filtered.map((user) => (
-            <div
-              key={user._id}
-              className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
-            >
-              {/* Name + avatar */}
-              <div className="col-span-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
-                  <span className="text-white text-xs font-bold">
-                    {user.name?.[0]?.toUpperCase() || "?"}
+            {filtered.map((user) => (
+              <div
+                key={user._id}
+                className="grid grid-cols-12 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition items-center last:border-0"
+              >
+                {/* Name + avatar */}
+                <div className="col-span-4 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
+                    <span className="text-white text-xs font-bold">
+                      {user.name?.[0]?.toUpperCase() || "?"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.name || "—"}
+                    </p>
+                    {user.isApproved && (
+                      <p className="text-[10px] text-green-600 font-semibold">
+                        ✓ Approved
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="col-span-4">
+                  <p className="text-sm text-gray-600 truncate">{user.email}</p>
+                </div>
+
+                {/* Role */}
+                <div className="col-span-2">
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${ROLE_STYLES[user.role]}`}>
+                    {user.role}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {user.name || "—"}
+
+                {/* Joined */}
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-400">
+                    {new Date(user.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </p>
-                  {user.isApproved && (
-                    <p className="text-[10px] text-green-600 font-semibold">
-                      ✓ Approved
-                    </p>
-                  )}
                 </div>
               </div>
+            ))}
+          </div>
 
-              {/* Email */}
-              <div className="col-span-4">
-                <p className="text-sm text-gray-600 truncate">{user.email}</p>
-              </div>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filtered.map((user) => (
+              <div
+                key={user._id}
+                className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
+                      <span className="text-white text-xs font-bold">
+                        {user.name?.[0]?.toUpperCase() || "?"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {user.name || "—"}
+                      </p>
+                      {user.isApproved && (
+                        <p className="text-[10px] text-green-600 font-semibold">
+                          ✓ Approved
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${ROLE_STYLES[user.role]}`}>
+                    {user.role}
+                  </span>
+                </div>
 
-              {/* Role */}
-              <div className="col-span-2">
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${ROLE_STYLES[user.role]}`}>
-                  {user.role}
-                </span>
+                <div className="border-t border-gray-100 pt-3 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-400">Email</span>
+                    <span className="text-gray-700 font-medium truncate max-w-[200px]">{user.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-400">Joined</span>
+                    <span className="text-gray-500 font-medium">
+                      {new Date(user.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
               </div>
-
-              {/* Joined */}
-              <div className="col-span-2">
-                <p className="text-xs text-gray-400">
-                  {new Date(user.createdAt).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

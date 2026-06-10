@@ -141,17 +141,7 @@ export default function CheckoutPaymentPage() {
                 Change
               </Link>
             </div>
-            <div
-              style={{
-                color: "#e5e7eb",
-                fontSize: "10px",
-                margin: "4px 0",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-              }}
-            >
-              ────────────────────────────────────────────────
-            </div>
+            <div className="border-t border-gray-200 my-2" />
             <p className="text-sm font-semibold text-gray-900 mb-1">
               {address.fullName}  •  {address.mobile}
             </p>

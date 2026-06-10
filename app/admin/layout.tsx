@@ -3,7 +3,8 @@
 import Sidebar from "@/components/layout/Sidebar";
 import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
 
 type AuthUser = {
   role?: string;
@@ -16,6 +17,7 @@ export default function AdminLayout({
 }) {
   const { user, loading } = useAuth() as { user: AuthUser | null; loading: boolean };
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -31,8 +33,29 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar role="admin" />
-      <main className="flex-1 p-8 max-w-7xl">{children}</main>
+      {/* Sidebar Toggle Button (Mobile only) */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed top-4 left-4 bg-gray-900 text-white w-10 h-10 rounded-lg flex md:hidden items-center justify-center z-[60] hover:bg-gray-800 transition"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Sidebar Overlay */}
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* Sidebar Wrapper */}
+      <div className={`admin-sidebar shrink-0 ${sidebarOpen ? 'open' : ''}`}>
+        <Sidebar role="admin" onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      {/* Main Content */}
+      <main className="admin-main flex-1 p-6 min-w-0">
+        {children}
+      </main>
     </div>
   );
 }
