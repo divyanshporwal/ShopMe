@@ -1,6 +1,7 @@
 import Order from "@/models/order.model";
 import Product from "@/models/product.model";
 import mongoose from "mongoose";
+import { mockProducts } from "@/lib/mockData";
 
 const MERCHANT_ORDER_STATUSES = ["PENDING", "PAID", "SHIPPED", "DELIVERED"];
 
@@ -9,26 +10,36 @@ const getItemProductId = (item) => item.productId || item._id;
 const normalizeStatus = (status) => String(status || "").trim().toUpperCase();
 
 const buildOrderFromItems = async (items, user, options = {}) => {
-  const productIds = items
+  const allProductIds = items
     .map(getItemProductId)
     .filter(Boolean)
-    .map((id) => id.toString())
-    .filter((id) => mongoose.Types.ObjectId.isValid(id));
+    .map((id) => id.toString().trim());
 
-  if (productIds.length === 0) {
+  if (allProductIds.length === 0) {
     throw new Error("No valid items provided");
   }
 
-  const products = await Product.find({ _id: { $in: productIds } });
-  const productMap = new Map(
-    products.map((product) => [product._id.toString(), product])
-  );
+  const validObjectIds = allProductIds
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  const dbProducts = validObjectIds.length > 0
+    ? await Product.find({ _id: { $in: validObjectIds } })
+    : [];
+
+  const productMap = new Map();
+  dbProducts.forEach((product) => {
+    productMap.set(product._id.toString(), product);
+  });
+  mockProducts.forEach((product) => {
+    productMap.set(product._id.toString(), product);
+  });
 
   const orderItems = [];
   let totalAmount = 0;
 
   for (const item of items) {
-    const productId = getItemProductId(item)?.toString();
+    const productId = getItemProductId(item)?.toString().trim();
     const quantity = Number(item.quantity || 1);
 
     if (!productId || quantity <= 0) {
@@ -42,8 +53,10 @@ const buildOrderFromItems = async (items, user, options = {}) => {
     }
 
     totalAmount += product.price * quantity;
+    
+    // We store the string ID since it is now supported by the Order model
     orderItems.push({
-      productId: product._id,
+      productId,
       quantity,
       price: product.price,
     });

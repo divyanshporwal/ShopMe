@@ -54,7 +54,13 @@ export async function POST(req) {
       mode: "payment",
 
       metadata: {
-        items: JSON.stringify(items),
+        items: JSON.stringify(
+          items.map((item) => ({
+            _id: item._id,
+            quantity: item.quantity,
+            price: item.price,
+          }))
+        ),
         userId: user._id.toString(),
       },
 
