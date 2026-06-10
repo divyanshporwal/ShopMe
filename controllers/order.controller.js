@@ -78,7 +78,7 @@ const decrementProductStock = async (items) => {
       return {
         updateOne: {
           filter: { _id: productId },
-          update: { $inc: { stock: -quantity } },
+          update: [{ $set: { stock: { $max: [0, { $subtract: ["$stock", quantity] }] } } }],
         },
       };
     })
@@ -107,6 +107,7 @@ const createOrderRecord = async (items, user, options = {}) => {
         status: "PENDING",
         paymentStatus: options.paymentStatus || "SUCCESS",
         paymentId: options.paymentId,
+        deliveryAddress: options.deliveryAddress,
       },
     ]
   );

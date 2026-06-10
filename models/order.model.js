@@ -33,9 +33,24 @@ const orderSchema = new mongoose.Schema(
       enum: ["PENDING", "SUCCESS", "FAILED"],
       default: "PENDING",
     },
+
+    deliveryAddress: {
+      fullName: String,
+      mobile: String,
+      address1: String,
+      address2: String,
+      city: String,
+      state: String,
+      pincode: String,
+      addressType: String,
+    },
   },
   { timestamps: true }
 );
+
+if (mongoose.models.Order && !mongoose.models.Order.schema.path('deliveryAddress')) {
+  delete mongoose.models.Order;
+}
 
 export default mongoose.models.Order ||
   mongoose.model("Order", orderSchema);

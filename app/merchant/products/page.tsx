@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Trash2, Eye, Package } from "lucide-react";
+import showToast from "@/lib/toast";
 
 type Product = {
   _id: string;
@@ -47,6 +48,29 @@ export default function MerchantProducts() {
       console.error(err);
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleQuickStockUpdate = async (productId: string, delta: number) => {
+    try {
+      const res = await fetch(`/api/merchant/products/${productId}/stock`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delta }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p._id === productId ? { ...p, stock: data.quantity } : p
+          )
+        );
+        showToast.success("Stock updated");
+      } else {
+        showToast.error(data.error || "Failed to update stock");
+      }
+    } catch (err) {
+      showToast.error("Failed to update stock");
     }
   };
 
@@ -163,15 +187,52 @@ export default function MerchantProducts() {
 
               {/* Stock */}
               <div className="col-span-1">
-                <span className={`text-xs font-bold ${
-                    product.stock === 0
-                    ? "text-red-500"
-                    : (product.stock || 0) <= 3
-                    ? "text-orange-500"
-                    : "text-green-600"
-                }`}>
-                  {product.stock}
-                </span>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}>
+                  <button
+                    onClick={() => handleQuickStockUpdate(product._id, -1)}
+                    disabled={(product.stock || 0) <= 0}
+                    style={{
+                      width: '28px', height: '28px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      background: 'white',
+                      cursor: (product.stock || 0) <= 0 ? 'not-allowed' : 'pointer',
+                      fontSize: '16px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    −
+                  </button>
+
+                  <span style={{
+                    minWidth: '24px',
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    color: (product.stock || 0) <= 0 ? '#ef4444' :
+                           (product.stock || 0) <= 5 ? '#f97316' : '#111827',
+                  }}>
+                    {product.stock || 0}
+                  </span>
+
+                  <button
+                    onClick={() => handleQuickStockUpdate(product._id, 1)}
+                    style={{
+                      width: '28px', height: '28px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      background: 'white',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               {/* Actions */}

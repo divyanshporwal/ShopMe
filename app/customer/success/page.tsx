@@ -37,6 +37,7 @@ function SuccessContent() {
 
         clearCart();
         localStorage.removeItem("checkout_cart");
+        sessionStorage.removeItem("shopme_delivery_address");
 
         router.push("/customer/orders");
       } catch (err) {

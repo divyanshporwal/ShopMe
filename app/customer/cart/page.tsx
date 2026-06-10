@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import showToast from "@/lib/toast";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
@@ -12,6 +13,18 @@ export default function CartPage() {
   const [promoCode, setPromoCode] = useState("SHOPME10");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
+
+  const handleIncreaseQty = (item: any) => {
+    if (item.quantity >= (item.stock || 0)) {
+      showToast.error(
+        `Maximum available stock is ${item.stock}. ` +
+        `You cannot add more of this item.`,
+        { duration: 4000 }
+      );
+      return;
+    }
+    updateQuantity(item._id, item.quantity + 1);
+  };
 
   const subtotal = cart.reduce(
     (sum: number, item: any) => sum + item.price * item.quantity, 0
@@ -160,9 +173,8 @@ export default function CartPage() {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                      disabled={item.quantity >= (item.stock || 99)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                      onClick={() => handleIncreaseQty(item)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-600 font-bold"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>

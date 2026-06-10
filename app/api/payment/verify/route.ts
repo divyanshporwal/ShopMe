@@ -39,6 +39,15 @@ export async function POST(req: Request) {
 
     const items = JSON.parse(session.metadata?.items || "[]") as CheckoutItem[];
     const userId = session.metadata?.userId;
+    const deliveryAddressStr = session.metadata?.deliveryAddress;
+    let deliveryAddress = null;
+    if (deliveryAddressStr) {
+      try {
+        deliveryAddress = JSON.parse(deliveryAddressStr);
+      } catch (e) {
+        console.error("Failed to parse deliveryAddress from metadata", e);
+      }
+    }
     const paymentId =
       typeof session.payment_intent === "string"
         ? session.payment_intent
@@ -60,6 +69,7 @@ export async function POST(req: Request) {
       {
         paymentId,
         paymentStatus: "SUCCESS",
+        deliveryAddress,
       }
     );
 

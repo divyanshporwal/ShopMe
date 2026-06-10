@@ -148,3 +148,19 @@ img {
 .sort-dropdown {
   animation: dropdownIn 0.15s ease forwards;
 }
+
+/* Add to Cart button hover */
+.action-overlay .add-to-cart-btn:not(:disabled):hover {
+  background: rgba(17, 24, 39, 1) !important;
+  transform: none;
+}
+
+/* Heart button hover */
+.action-overlay .wishlist-btn:not(:disabled):hover {
+  transform: scale(1.1);
+}
+
+/* Heart button — wishlisted state */
+.wishlist-btn.wishlisted {
+  background: rgba(239, 68, 68, 0.92) !important;
+}

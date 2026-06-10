@@ -2,13 +2,14 @@
 import Link from "next/link";
 import {
   Search, ShoppingBag, User, ChevronDown,
-  MapPin, LogOut, LayoutDashboard, Store, Menu, ChevronRight
+  MapPin, LogOut, LayoutDashboard, Store, Menu, ChevronRight, Heart
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import toast from "react-hot-toast";
 import showToast from "@/lib/toast";
+import LocationModal from "@/components/LocationModal";
 
 const NAV_LINKS = [
   { label: "ALL", href: "/customer/products", category: "" },
@@ -36,6 +37,14 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("Indore");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("shopme_location");
+    if (saved) setSelectedLocation(saved);
+  }, []);
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -151,6 +160,21 @@ export default function Navbar() {
         {/* Right section - Hidden on mobile */}
         <div className="hidden md:flex items-center ml-auto shrink-0 divide-x divide-gray-200 border-l border-gray-200">
 
+          {(!user || user.role === "CUSTOMER") && (
+            <button
+              onClick={() => setLocationModalOpen(true)}
+              className="hidden lg:flex items-center gap-2 px-5 h-16 hover:bg-gray-50 transition group"
+            >
+              <MapPin className="w-4 h-4 text-gray-400 group-hover:text-black shrink-0" />
+              <div className="flex flex-col leading-none text-left">
+                <span className="text-[11px] text-gray-400 font-medium">Deliver to</span>
+                <span className="text-sm font-bold text-gray-900 group-hover:text-black">
+                  {selectedLocation} <ChevronDown className="w-3 h-3 inline-block" />
+                </span>
+              </div>
+            </button>
+          )}
+
           {userLoading ? (
             <div className="flex items-center gap-3 px-5 h-16">
               <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
@@ -161,19 +185,6 @@ export default function Navbar() {
             </div>
           ) : user ? (
             <>
-              {/* Location — only for customers */}
-              {user.role === "CUSTOMER" && (
-                <button className="hidden lg:flex items-center gap-2 px-5 h-16 hover:bg-gray-50 transition group">
-                  <MapPin className="w-4 h-4 text-gray-400 group-hover:text-black shrink-0" />
-                  <div className="flex flex-col leading-none text-left">
-                    <span className="text-[11px] text-gray-400 font-medium">Deliver to</span>
-                    <span className="text-sm font-bold text-gray-900 group-hover:text-black">
-                      Indore <ChevronDown className="w-3 h-3 inline-block" />
-                    </span>
-                  </div>
-                </button>
-              )}
-
               {/* Account dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -229,6 +240,17 @@ export default function Navbar() {
                         >
                           <ShoppingBag className="w-4 h-4 text-gray-400" />
                           My Orders
+                        </Link>
+                      )}
+
+                      {user.role === "CUSTOMER" && (
+                        <Link
+                          href="/customer/wishlist"
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition"
+                        >
+                          <Heart className="w-4 h-4 text-gray-400" />
+                          My Wishlist
                         </Link>
                       )}
 
@@ -369,6 +391,14 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </Link>
                     <Link
+                      href="/customer/wishlist"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
+                    >
+                      My Wishlist
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                    <Link
                       href="/customer/cart"
                       onClick={() => setMobileMenuOpen(false)}
                       className="text-gray-900 text-[15px] font-medium px-5 py-[15px] border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 cursor-pointer w-full"
@@ -443,6 +473,12 @@ export default function Navbar() {
           </ul>
         </div>
       </div>
+      <LocationModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        onSelect={(city) => setSelectedLocation(city)}
+        currentLocation={selectedLocation}
+      />
     </header>
   );  
 }

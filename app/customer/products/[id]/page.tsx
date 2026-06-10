@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { mockProducts } from "@/lib/mockData";
+import { toast } from "react-hot-toast";
+import showToast from "@/lib/toast";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -56,6 +58,26 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+
+    // Check stock
+    const existingCartItem = (useCartStore.getState().cart || []).find(
+      (item: any) => item._id?.toString() === product._id?.toString()
+    );
+    const currentCartQty = existingCartItem?.quantity || 0;
+
+    if (product.stock <= 0) {
+      showToast.error("This product is out of stock");
+      return;
+    }
+
+    if (currentCartQty + quantity > product.stock) {
+      showToast.error(
+        `Only ${product.stock} unit${product.stock === 1 ? '' : 's'} available. ` +
+        `You already have ${currentCartQty} in your cart.`
+      );
+      return;
+    }
+
     for (let i = 0; i < quantity; i++) {
       addToCart({
         _id: product._id,
@@ -69,6 +91,42 @@ export default function ProductDetailPage() {
     }
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
+
+    toast.success(
+      (t) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+          <img
+            src={product.images?.[0] || "/placeholder.jpg"}
+            alt={product.title}
+            style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: '600', fontSize: '13px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {product.title}
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', marginTop: '1px' }}>
+              is added to cart
+            </div>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', color: '#ffffff', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          >✕</button>
+        </div>
+      ),
+      {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+          color: '#ffffff',
+          borderRadius: '14px',
+          padding: '12px 14px',
+          maxWidth: '340px',
+          border: 'none',
+          boxShadow: '0 8px 32px rgba(22,163,74,0.35)',
+        },
+      }
+    );
   };
 
   const discount = product?.originalPrice

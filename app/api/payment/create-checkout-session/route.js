@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAuthUser } from "@/middleware/auth";
 import { connectDB } from "@/lib/db";
+import Product from "@/models/product.model";
 
 function getStripe() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -28,10 +29,26 @@ export async function POST(req) {
     await connectDB();
 
     const user = await getAuthUser();
-    const { items } = await req.json();
+    const { items, deliveryAddress } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
+    }
+
+    const productIds = items.map(i => i._id);
+    const dbProducts = await Product.find({ _id: { $in: productIds } });
+    const productMap = new Map(dbProducts.map(p => [p._id.toString(), p]));
+
+    for (const item of items) {
+      const dbProduct = productMap.get(item._id);
+      if (dbProduct) {
+        if (dbProduct.stock <= 0) {
+          return NextResponse.json({ error: 'This product is out of stock' }, { status: 400 });
+        }
+        if (dbProduct.stock < item.quantity) {
+          return NextResponse.json({ error: `Only ${dbProduct.stock} items available` }, { status: 400 });
+        }
+      }
     }
 
     const stripe = getStripe();
@@ -62,6 +79,7 @@ export async function POST(req) {
           }))
         ),
         userId: user._id.toString(),
+        deliveryAddress: JSON.stringify(deliveryAddress || null),
       },
 
       success_url: `${baseUrl}/customer/success?session_id={CHECKOUT_SESSION_ID}`,

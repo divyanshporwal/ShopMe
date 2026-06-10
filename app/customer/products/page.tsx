@@ -54,6 +54,32 @@ function ProductsPageContent() {
 
   // ✅ FIX: products state at top
   const [products, setProducts] = useState<Product[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const initAuthAndWishlist = async () => {
+      try {
+        const authRes = await fetch("/api/auth/me");
+        const authData = await authRes.json();
+        if (authData._id) {
+          setIsLoggedIn(true);
+          const wlRes = await fetch("/api/customer/wishlist");
+          const wlData = await wlRes.json();
+          const ids = (wlData.wishlist || []).map((item: any) =>
+            (item._id || item).toString()
+          );
+          setWishlistIds(ids);
+        } else {
+          setIsLoggedIn(false);
+          setWishlistIds([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch wishlist:", err);
+      }
+    };
+    initAuthAndWishlist();
+  }, []);
 
   // ✅ FIX: fetch data properly
   useEffect(() => {
@@ -237,7 +263,21 @@ function ProductsPageContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-5">
           {filtered.map((product) => (
-            <ProductCard key={product._id} {...product} />
+            <ProductCard
+              key={product._id}
+              {...product}
+              wishlistIds={wishlistIds}
+              requireAuth={!isLoggedIn}
+              onWishlistChange={(productId, added) => {
+                if (added) {
+                  setWishlistIds((prev) => [...prev, productId]);
+                } else {
+                  setWishlistIds((prev) =>
+                    prev.filter((id) => id !== productId)
+                  );
+                }
+              }}
+            />
           ))}
         </div>
       )}

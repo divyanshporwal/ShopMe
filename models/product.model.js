@@ -12,7 +12,7 @@ const productSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    stock: { type: Number, default: 1 },
+    stock: { type: Number, default: 1, min: [0, 'Quantity cannot be negative'] },
     category: {
       type: String,
       enum: ["Sneakers", "Apparel", "Watches", "Accessories", "Perfumes"],

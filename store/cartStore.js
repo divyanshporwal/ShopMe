@@ -133,7 +133,7 @@ export const useCartStore = create(
 
       totalPrice: () => {
         const subtotal = get().subtotal();
-        const shipping = subtotal >= 400 ? 0 : 99;
+        const shipping = subtotal >= 999 ? 0 : 49;
         const promoDiscount = get().promoApplied
           ? Math.round(subtotal * 0.1)
           : 0;
@@ -150,7 +150,7 @@ export const useCartStore = create(
 
       shipping: () => {
         const subtotal = get().subtotal();
-        return subtotal >= 400 ? 0 : 99;
+        return subtotal >= 999 ? 0 : 49;
       },
 
       savedAmount: () =>
