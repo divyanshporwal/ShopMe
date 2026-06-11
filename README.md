@@ -4,7 +4,7 @@ A modern full-stack eCommerce platform built with Next.js, MongoDB, Stripe, and 
 
 ## 🚀 Live Demo
 
-**Production URL:** https://shop-me-git-main-divyansh-porwals-projects.vercel.app/
+**Production URL:** https://shop-hesd2b5uj-divyansh-porwals-projects.vercel.app/
 
 ## 📖 Overview
 
