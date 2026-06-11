@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: "ShopMe",
