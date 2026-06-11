@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
-        <Footer />
+        {/* <Footer /> */}
 
         {/* Toast notifications */}
         <Toaster
