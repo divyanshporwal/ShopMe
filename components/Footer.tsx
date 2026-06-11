@@ -6,7 +6,7 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   const links = [
-    { label: 'Home', href: '/customer/products' },,
+    { label: 'Home', href: '/customer/products' },
     { label: 'Wishlist', href: '/customer/wishlist' },
     { label: 'My Orders', href: '/customer/orders' },
   ]
